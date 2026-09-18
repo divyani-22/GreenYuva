@@ -23,11 +23,10 @@
 - [🏛️ System Architecture](#️-system-architecture)
 - [🔄 User Journey & Action Workflow](#-user-journey--action-workflow)
 - [📱 Mobile App Showcase (15 Live Screens)](#-mobile-app-showcase)
-- [🛠️ Technology Stack](#️-technology-stack)
-- [🔐 Backend, Security & Cloud Architecture](#-backend-security--cloud-architecture)
+- [🛠️ Technology Stack & Ecosystem](#️-technology-stack--ecosystem)
+- [🔐 Multi-Cloud & Security Architecture](#-multi-cloud--security-architecture)
 - [🚀 Installation & Getting Started](#-installation--getting-started)
 - [🗺️ Campus Decarbonization Roadmap](#️-campus-decarbonization-roadmap)
-- [👨‍💻 Author & Acknowledgements](#-author--acknowledgements)
 
 ---
 
@@ -61,13 +60,13 @@ While youth desire to participate in ecological stewardship, traditional climate
 
 ### 1. ⚡ GreenRush — Tactical Campus Eco-Radar
 * **Hyperlocal GPS Geo-Fencing**: Interactive radar view pinpointing active campus decarbonization hubs (e.g., PCCOE, COEP, VIT, solar microgrids, compost facilities, Miyawaki forests).
-* **Live Distance & Proximity Locking**: Missions unlock only when students are physically within the verified campus perimeter.
+* **Live Distance & Proximity Locking**: Missions unlock only when students are physically within the verified campus perimeter (<50 meters).
 * **Camera Proof Verification**: Real-time snapshot submission with auto-queued offline upload resilience.
 
 ### 2. 🔄 YuvaSwap — Circular Campus Marketplace
 * **Zero-Waste Student Economy**: Buy, sell, or donate pre-owned engineering drawing drafters, scientific calculators, lab aprons, and semester textbooks.
 * **CO₂ & Landfill Diverted Metrics**: Every completed transaction computes kilograms of paper and carbon emissions diverted from urban landfills.
-* **Direct In-App Chat & Safety**: Verified student-to-student exchange with campus meeting zones.
+* **Direct In-App Chat & Safety**: Verified student-to-student exchange with designated campus meeting zones.
 
 ### 3. 📊 YuvaSense — Real-Time Indian Environmental Intelligence
 * **Live CPCB India & OpenAQ Integration**: Real-time monitoring of $PM_{2.5}$, $PM_{10}$, $NO_2$, $SO_2$, and composite AQI for Indian metropolitan and tier-2 college hubs.
@@ -88,44 +87,75 @@ While youth desire to participate in ecological stewardship, traditional climate
 ## 🏛️ System Architecture
 
 ```mermaid
-flowchart TB
-    subgraph ClientPresentation["📱 Mobile Presentation Layer (Flutter 3.x / Dart)"]
-        UI["Neo-Brutalist Design System<br/>• Bold 3px Black Borders<br/>• Flat Vibrant Color Blocking<br/>• Tactical Typography"]
-        Radar["GreenRush CustomPainter<br/>Tactical Radar Engine"]
-        State["State Orchestration<br/>• ValueNotifiers<br/>• StreamBuilders<br/>• Offline Cache Fallbacks"]
+flowchart TD
+    %% CLIENT LAYER
+    subgraph ClientPresentation["📱 CLIENT PRESENTATION & UI LAYER (Flutter 3.x / Dart)"]
+        direction TB
+        UIFramework["Neo-Brutalist UI Framework<br/>• Bold 3px High-Contrast Borders<br/>• Flat Saturated Color Blocking<br/>• Tactile Depth & Micro-Interactions"]
+        RadarEngine["GreenRush Tactical Radar Engine<br/>• CustomPainter Dynamic Canvas<br/>• Compass Bearing & Gyro Orientation<br/>• Smooth Polar Grid & Target Blips"]
+        CampusHubsUI["Interactive Campus Modules<br/>• YuvaSwap Circular Marketplace<br/>• YuvaSense Real-Time Sensor Hub<br/>• YuvaVibe College Community Feeds"]
+        KarmaCanteenUI["Karma Canteen & Rewards Portal<br/>• Dynamic Vector QR Code Voucher Engine<br/>• Daily Streak Counter & Milestone Badges"]
     end
 
-    subgraph ServiceLayer["⚙️ Core Services & Logic"]
-        AqiSvc["AqiService<br/>(CPCB / OpenAQ Feeds)"]
-        LocSvc["LocationService<br/>(Geolocator GPS)"]
-        SwapSvc["YuvaSwapService<br/>(Circular Commerce)"]
-        AiSvc["YuvaSathi AIService<br/>(Gemini 1.5 Pro)"]
-        RewardSvc["RewardService<br/>(Karma Canteen Engine)"]
-        CacheSvc["OfflineCacheService<br/>(SharedPreferences / Memory)"]
+    %% CLIENT LOGIC & STATE
+    subgraph ClientLogic["⚙️ CORE APPLICATION SERVICES & LOGIC LAYER"]
+        direction TB
+        StateMgr["Reactive State Orchestrator<br/>• StreamBuilders & ValueNotifiers<br/>• Optimistic UI Updates"]
+        LocSvc["LocationService<br/>• Geolocator GPS Subsystem<br/>• Haversine Distance & Geo-Fence Proximity (<50m)"]
+        AqiSvc["AqiService<br/>• CPCB & OpenAQ Telemetry Aggregator<br/>• India Standard AQI Calculator"]
+        SwapSvc["YuvaSwapService<br/>• P2P Item Catalog & Negotiation<br/>• CO₂ & Landfill Diversion Formulas"]
+        AiSvc["YuvaSathi AIService<br/>• Google Gemini 1.5 Pro Context Pipeline<br/>• Multi-turn Zero-Waste Campus Tutor"]
+        RewardSvc["RewardService<br/>• Karma Ledger & Anti-Tamper Balance<br/>• Canteen Voucher Validation"]
+        OfflineSync["OfflineCacheService<br/>• SharedPreferences & Memory FIFO Queue<br/>• Network Connectivity Auto-Retry Sync"]
     end
 
-    subgraph CloudInfra["☁️ Cloud Backend & Storage"]
-        subgraph FirebaseCluster["🔥 Firebase Cloud Services"]
-            FAuth["Firebase Auth<br/>(Email / Password / Campus SSO)"]
-            Firestore["Cloud Firestore<br/>• Users & Karma Balances<br/>• Verifications & Submissions<br/>• Campus Streaks & Leaderboards"]
+    %% DUAL CLOUD INFRASTRUCTURE
+    subgraph CloudInfra["☁️ DUAL-ENGINE CLOUD INFRASTRUCTURE"]
+        direction TB
+        subgraph FirebaseStack["🔥 Google Firebase Cluster"]
+            FAuth["Firebase Auth<br/>• Email / Password Verification<br/>• Secure JWT & User Sessions"]
+            Firestore["Cloud Firestore (Real-Time NoSQL)<br/>• /users (Karma Balance & Streaks)<br/>• /missions (Active Campus Hubs)<br/>• /verifications (Proof Ledger)<br/>• /swap_items (Marketplace Catalog)<br/>• /notifications (Push Broadcasts)"]
         end
-        subgraph SupabaseCluster["⚡ Supabase Infrastructure"]
-            SupaStorage["Supabase Storage S3<br/>• avatars/<br/>• proofs/<br/>• swap_images/"]
-            SupaDB["Supabase Postgres<br/>(Resilient Secondary Store)"]
+        subgraph SupabaseStack["⚡ Supabase Cloud Infrastructure"]
+            SupaStorage["Supabase S3 Object Storage<br/>• avatars/ (User Profiles)<br/>• proofs/ (Mission Verification Photos)<br/>• swap_images/ (Marketplace Items)"]
+            SupaDB["Supabase Postgres DB<br/>• Structured Relational Fallback<br/>• Storage Security & CDN Edge"]
         end
     end
 
-    subgraph ExternalIntelligence["🌐 External Intelligence & APIs"]
-        GeminiAPI["Google Gemini AI REST API"]
-        CPCBAPI["CPCB / OpenAQ Real-Time Sensors"]
-        UPISystem["Unified Payments Interface (UPI)<br/>8080956037-2@ybl"]
+    %% VERIFICATION & ADMIN PIPELINE
+    subgraph VerificationPipeline["🛡️ MISSION VERIFICATION & MODERATION PIPELINE"]
+        direction TB
+        SubmissionIngest["Proof Ingestion Engine<br/>• EXIF Metadata Stripping<br/>• Geo-Stamp & Timestamp Tagging"]
+        AdminModeration["Admin Moderation Console<br/>• Side-by-Side Photo & GPS Audit<br/>• One-Click Approve / Reject"]
+        TokenDispatcher["Karma Mint & Streak Dispatcher<br/>• Real-Time Firestore Transaction<br/>• Push Notification Trigger"]
     end
 
-    ClientPresentation --> ServiceLayer
-    ServiceLayer --> FirebaseCluster
-    ServiceLayer --> SupabaseCluster
-    ServiceLayer --> ExternalIntelligence
-    CacheSvc -.->|"Offline Fallback"| ClientPresentation
+    %% EXTERNAL INTELLIGENCE & TELEMETRY
+    subgraph ExternalFeeds["🌐 EXTERNAL INTELLIGENCE & TELEMETRY FEEDS"]
+        direction TB
+        GeminiAPI["Google Gemini 1.5 Pro API<br/>• High-Speed Multimodal Eco-Reasoning"]
+        CPCBSensors["CPCB India & OpenAQ Sensors<br/>• Live PM2.5, PM10, NO₂, SO₂ Feeds"]
+        IMDBulletin["IMD Disaster Warning Service<br/>• Western Disturbances & Extreme Weather Alerts"]
+        UPIEngine["Unified Payments Interface (UPI)<br/>• Direct UPI Deep-Link Protocol (upi://pay)"]
+    end
+
+    %% CONNECTIONS & FLOWS
+    ClientPresentation ==> ClientLogic
+    
+    LocSvc -->|"Proximity Stamp"| SubmissionIngest
+    ClientLogic -->|"Auth & Realtime Sync"| FirebaseStack
+    ClientLogic -->|"Media Ingestion (HTTP Multi-Part)"| SupaStorage
+    OfflineSync -.->|"Cache Fallback & Re-Sync"| ClientPresentation
+
+    SubmissionIngest --> AdminModeration
+    AdminModeration --> TokenDispatcher
+    TokenDispatcher -->|"Credit Coins & Streaks"| Firestore
+    TokenDispatcher -->|"Real-Time Push Alert"| ClientPresentation
+
+    AiSvc <-->|"REST / HTTPS TLS"| GeminiAPI
+    AqiSvc <-->|"Sensor Telemetry JSON"| CPCBSensors
+    AqiSvc <-->|"Weather Bulletins"| IMDBulletin
+    KarmaCanteenUI -->|"Deep Link UPI QR"| UPIEngine
 ```
 
 ---
@@ -203,57 +233,41 @@ Every screen in Green Yuva has been crafted with a distinctive **Neo-Brutalist U
 
 ---
 
-## 🛠️ Technology Stack
+## 🛠️ Technology Stack & Ecosystem
 
-| Domain | Technology / Framework | Usage in Green Yuva |
-| :--- | :--- | :--- |
-| **Frontend Mobile** | **Flutter 3.x / Dart 3.x** | Cross-platform Android & iOS codebase with hot reload |
-| **UI Paradigm** | **Neo-Brutalism Design** | High-contrast borders, solid offsets, vibrant flat colors, tactile cards |
-| **Authentication** | **Firebase Auth** | Campus email authentication, session management, secure tokens |
-| **Primary Database** | **Cloud Firestore** | Real-time reactive data for users, missions, verifications, and feeds |
-| **Asset Storage** | **Supabase Storage S3** | High-throughput distributed storage for avatars, proofs, swap_images |
-| **Artificial Intelligence** | **Google Gemini 1.5 Pro** | Contextual climate conversational tutor (YuvaSathi AI) |
-| **Telemetry & AQI** | **CPCB India & OpenAQ** | Real-time pollution sensor data (PM2.5, PM10, AQI) |
-| **Geospatial & GPS** | **Geolocator & Google Maps** | Hyperlocal campus geo-fences, distance calculation, radar coordinates |
-| **Local Cache & Offline** | **SharedPreferences & Memory Cache** | Full offline resilience for low-connectivity university zones |
-| **Payments & P2P** | **UPI QR Protocol** | Direct UPI deep-linking for campus rewards and student swaps |
+<p align="center">
+  <img src="https://skillicons.dev/icons?i=flutter,dart,firebase,supabase,postgres,android,apple,gcp,git,github" alt="Green Yuva Ecosystem Stack" />
+</p>
+
+| Logo | Technology | Domain | Role & Implementation in Green Yuva |
+| :---: | :--- | :--- | :--- |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/flutter/flutter-original.svg" width="48" height="48" alt="Flutter" /> | **Flutter 3.x** | Client Framework | Cross-platform multi-threaded native rendering for Android & iOS |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/dart/dart-original.svg" width="48" height="48" alt="Dart" /> | **Dart 3.x** | Core Language | Sound null-safety, strong typing, asynchronous event loop & isolates |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/firebase/firebase-plain.svg" width="48" height="48" alt="Firebase" /> | **Google Firebase** | Cloud Backend | Reactive Cloud Firestore NoSQL, Firebase Auth session lifecycle & push feeds |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/supabase/supabase-original.svg" width="48" height="48" alt="Supabase" /> | **Supabase Cloud** | Distributed Storage | S3-compatible cloud storage for `avatars`, `proofs`, and `swap_images` |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="48" height="48" alt="PostgreSQL" /> | **PostgreSQL** | Relational Store | Resilient relational fallback and high-throughput diagnostic telemetry store |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/googlecloud/googlecloud-original.svg" width="48" height="48" alt="Google Gemini AI" /> | **Google Gemini AI** | Artificial Intelligence | Multimodal reasoning engine for YuvaSathi AI campus conversational tutoring |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" width="48" height="48" alt="Google Maps Platform" /> | **Google Maps & CPCB** | Geospatial & Telemetry | Live CPCB India & OpenAQ air quality telemetry + Google Maps SDK integration |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/android/android-original.svg" width="48" height="48" alt="Android" /> | **Android SDK** | Native OS Target | Material Neo-Brutalism system widgets, camera hardware & GPS sensor integration |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/apple/apple-original.svg" width="48" height="48" alt="Apple iOS" /> | **Apple iOS** | Native OS Target | Cupertino compatibility layer, location permissions & smooth 60fps animations |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg" width="48" height="48" alt="Git" /> | **Git & GitHub** | Source Control | Distributed version control, continuous verification & modular architecture |
 
 ---
 
-## 🔐 Backend, Security & Cloud Architecture
+## 🔐 Multi-Cloud & Security Architecture
 
-### Multi-Cloud Redundancy
-Green Yuva employs a **hybrid dual-engine cloud architecture**:
-1. **Firebase Cloud Firestore**: Manages real-time data sync, user authentication, streak counters, and admin verification workflows with sub-second latency.
-2. **Supabase S3 Storage**: Handles media ingestion (proof pictures, marketplace photos, user avatars) across three dedicated buckets (`avatars`, `proofs`, `swap_images`).
-3. **Graceful Offline Degradation**: When a student enters a campus basement, lab, or low-connectivity area, the `OfflineCacheService` transparently serves cached missions, quizzes, and telemetry while queueing submissions in an on-device sync pipeline.
+### 1. Hybrid Dual-Engine Cloud Pipeline
+Green Yuva implements an enterprise-grade **multi-cloud hybrid architecture**:
+* **Sub-Second Real-Time Synchronization**: Firebase Cloud Firestore manages reactive state changes (leaderboard rankings, Karma Coin balances, instant notifications, and moderation queues) with continuous WebSocket listeners.
+* **Distributed Binary Storage**: Supabase S3 handles large multi-part media uploads across isolated buckets:
+  * `avatars`: User profile pictures with automatic public CDN edge caching.
+  * `proofs`: Geo-tagged mission verification images submitted by students.
+  * `swap_images`: Multi-photo student marketplace item listings.
 
-### Cloud Firestore Security Rules
-Production-hardened security rules ensure that users can only modify their own profile data, while verification reviews are strictly reserved for campus administrators:
-
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
-    match /verifications/{docId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-    match /swap_items/{itemId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && 
-        resource.data.sellerId == request.auth.uid;
-    }
-  }
-}
-```
+### 2. High-Availability Offline Resilience
+Campus life frequently involves subterranean classrooms, workshops, and basements with poor cellular reception. Green Yuva's `OfflineCacheService` guarantees seamless operation:
+* **Optimistic Local Storage**: Mission lists, CPCB AQI snapshots, and quiz questions are cached locally via `SharedPreferences` and in-memory caches.
+* **Pending Submission Queue**: When actions or proofs are submitted offline, they are automatically held in a local FIFO queue and pushed to the cloud backend as soon as connectivity is restored.
 
 ---
 
@@ -262,8 +276,8 @@ service cloud.firestore {
 ### Prerequisites
 * **Flutter SDK**: `>=3.19.0`
 * **Dart SDK**: `>=3.3.0`
-* **Android Studio / VS Code** with Flutter extensions installed
-* An active **Firebase Project** (`google-services.json` configured)
+* **Android Studio / VS Code** with Flutter and Dart extensions
+* An active **Firebase Project** (`google-services.json` in `android/app/`)
 * An active **Supabase Project** with buckets: `avatars`, `proofs`, `swap_images`
 
 ### 1. Clone the Repository
@@ -285,7 +299,7 @@ SUPABASE_ANON_KEY=your-supabase-anon-key
 GEMINI_API_KEY=your-google-gemini-api-key
 ```
 
-### 4. Run Static Analysis & Verification
+### 4. Run Static Analysis & Code Verification
 ```bash
 dart analyze lib
 ```
@@ -295,7 +309,7 @@ dart analyze lib
 # Debug run on connected Android device or emulator
 flutter run
 
-# Build release APK
+# Build production release APK
 flutter build apk --release
 ```
 
@@ -313,21 +327,7 @@ flutter build apk --release
 
 ---
 
-## 👨‍💻 Author & Acknowledgements
-
-**Green Yuva** is envisioned and engineered by:
-* **Madhav Zanwar** — *Lead Developer & Climate Tech Enthusiast*
-* **GitHub**: [@madhavzanwar](https://github.com/madhavzanwar)
-* **Target Repository**: [github.com/madhavzanwar/green-yuva](https://github.com/madhavzanwar/green-yuva)
-
-### 🙏 Acknowledgements
-* **Central Pollution Control Board (CPCB) & OpenAQ** for open environmental telemetry feeds.
-* **Google Gemini** for powering conversational sustainability intelligence.
-* **The Indian Youth & Campus Green Chapters** leading real-world decarbonization across the nation.
-
----
-
 <p align="center">
   <b>Built with 💚 for India's Youth & A Sustainable Tomorrow.</b><br/>
-  <sub>© 2026 Green Yuva Team — Madhav Zanwar. Released under the MIT License.</sub>
+  <sub>Released under the MIT License.</sub>
 </p>
