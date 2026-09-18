@@ -70,3 +70,5 @@ slide_backgrounds/
 presentation/
 pptx_renders/
 test_bg_slides/
+
+*.bat
