@@ -72,3 +72,5 @@ pptx_renders/
 test_bg_slides/
 
 *.bat
+
+.firebase/
