@@ -6,6 +6,16 @@
 </p>
 
 <p align="center">
+  <a href="https://greenyuva-e56f6.web.app" target="_blank">
+    <img src="https://img.shields.io/badge/🚀%20LIVE%20DEMO-CLICK%20TO%20LAUNCH%20WEB%20APP-00C853?style=for-the-badge&logo=googlechrome&logoColor=white" height="46" alt="Live Demo" />
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://greenyuva-e56f6.firebaseapp.com" target="_blank">
+    <img src="https://img.shields.io/badge/⚡%20LIVE%20DEMO%20(MIRROR)-OPEN%20APP-0288D1?style=for-the-badge&logo=firebase&logoColor=white" height="46" alt="Live Demo Mirror" />
+  </a>
+</p>
+
+<p align="center">
   <a href="https://flutter.dev"><img src="https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter" /></a>
   <a href="https://dart.dev"><img src="https://img.shields.io/badge/Dart-3.x-0175C2?style=for-the-badge&logo=dart&logoColor=white" alt="Dart" /></a>
   <a href="https://firebase.google.com"><img src="https://img.shields.io/badge/Firebase-Auth%20%7C%20Firestore-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase" /></a>
@@ -15,9 +25,17 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge" alt="License" /></a>
 </p>
 
+> [!TIP]
+> ### 🌐 Interactive Live Demo Online!
+> **Green Yuva is live on the internet!** Experience the fully functional platform directly in your browser without installing anything:  
+> 👉 **[🚀 Launch Live Demo (greenyuva-e56f6.web.app)](https://greenyuva-e56f6.web.app)**  
+> 🔗 **[⚡ Alternative Live Demo Mirror](https://greenyuva-e56f6.firebaseapp.com)**  
+> *(PWA enabled: open in Safari on iPhone or Chrome on Android and tap **"Add to Home Screen"** to run full-screen)*
+
 ---
 
 ## 📌 Table of Contents
+- [🌐 Live Demo Links](#-interactive-live-demo-online)
 - [🌍 Vision & The Problem](#-vision--the-problem)
 - [✨ Core Innovation Pillars](#-core-innovation-pillars)
 - [🏛️ System Architecture](#️-system-architecture)
