@@ -534,7 +534,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
       ),
       floatingActionButton: _selectedTab == 0
           ? Padding(
-              padding: const EdgeInsets.only(bottom: 76),
+              padding: const EdgeInsets.only(bottom: 115),
               child: GestureDetector(
                 onTap: () async {
                   final result = await Navigator.push(
@@ -819,7 +819,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
             if (_posts.isEmpty)
               _buildEmptyState(),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 120), // Padding for floating bottom navbar
           ],
         ),
       ),

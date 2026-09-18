@@ -22,6 +22,7 @@ class EmailAuthForm extends StatefulWidget {
 
 class _EmailAuthFormState extends State<EmailAuthForm> {
   final _formKey = GlobalKey<FormState>();
+  String _fullName = '';
   String _email = '';
   String _password = '';
   String _firstName = '';
@@ -36,13 +37,36 @@ class _EmailAuthFormState extends State<EmailAuthForm> {
       _formKey.currentState!.save();
       setState(() => _isSubmitting = true);
       final userService = UserService();
+
+      if (_fullName.trim().isNotEmpty) {
+        final parts = _fullName.trim().split(RegExp(r'\s+'));
+        if (parts.isNotEmpty) {
+          _firstName = parts.first;
+          _lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+        }
+      }
+
       try {
         if (_isLogin) {
           UserCredential? userCredential;
           try {
             userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(email: _email, password: _password);
+          } on FirebaseAuthException catch (e) {
+            if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
+              if (mounted) {
+                setState(() => _isSubmitting = false);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(e.message ?? 'Invalid email or password. Please check your credentials.'),
+                    backgroundColor: AppColors.dustyCoral,
+                  ),
+                );
+              }
+              return;
+            }
+            print('⚠️ FirebaseAuth signIn note: ${e.code}');
           } catch (e) {
-            // FirebaseAuth fallback to local guest session
+            print('⚠️ Auth signIn general note: $e');
           }
           final firebaseUser = userCredential?.user;
           AppUser? appUser;
@@ -52,11 +76,11 @@ class _EmailAuthFormState extends State<EmailAuthForm> {
             } catch (_) {}
           }
           if (appUser == null) {
-            final local = await userService.getLocalUser();
+            final local = await userService.getLocalUser(createIfNull: true);
             appUser = AppUser(
-              id: local.id,
-              firstName: local.firstName.isNotEmpty ? local.firstName : (_email.split('@').first),
-              lastName: local.lastName,
+              id: local!.id,
+              firstName: _firstName.isNotEmpty ? _firstName : (local.firstName.isNotEmpty ? local.firstName : (_email.split('@').first)),
+              lastName: _lastName.isNotEmpty ? _lastName : local.lastName,
               points: local.points,
               savedPosts: local.savedPosts,
               likedPosts: local.likedPosts,
@@ -67,9 +91,15 @@ class _EmailAuthFormState extends State<EmailAuthForm> {
               weekGoal: local.weekGoal,
             );
             await userService.saveCurrentLocalUser(appUser);
+          } else if (_firstName.isNotEmpty) {
+            appUser = appUser.copyWith(
+              firstName: _firstName,
+              lastName: _lastName,
+            );
+            await userService.saveCurrentLocalUser(appUser);
           }
           if (mounted) setState(() => _isSubmitting = false);
-          widget.showSuccessDialog('Welcome back to your EcoSprint workspace!');
+          widget.showSuccessDialog('Welcome, ${_firstName.isNotEmpty ? _firstName : 'Climate Champion'}! Your Green Yuva workspace is ready.');
         } else {
           String uid = 'user_${DateTime.now().millisecondsSinceEpoch}';
           try {
@@ -80,12 +110,39 @@ class _EmailAuthFormState extends State<EmailAuthForm> {
             if (userCredential.user != null) {
               uid = userCredential.user!.uid;
             }
-          } catch (e) {}
+          } on FirebaseAuthException catch (e) {
+            if (e.code == 'email-already-in-use') {
+              if (mounted) {
+                setState(() => _isSubmitting = false);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('An account already exists for this email. Please log in.'),
+                    backgroundColor: AppColors.dustyCoral,
+                  ),
+                );
+              }
+              return;
+            } else if (e.code == 'weak-password') {
+              if (mounted) {
+                setState(() => _isSubmitting = false);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Password is too weak. Please use at least 6 characters.'),
+                    backgroundColor: AppColors.dustyCoral,
+                  ),
+                );
+              }
+              return;
+            }
+            print('⚠️ FirebaseAuth signUp note: ${e.code}');
+          } catch (e) {
+            print('⚠️ Auth signUp general note: $e');
+          }
 
           final newUser = AppUser(
             id: uid,
-            firstName: _firstName.trim(),
-            lastName: _lastName.trim(),
+            firstName: _firstName.trim().isNotEmpty ? _firstName.trim() : 'Green',
+            lastName: _lastName.trim().isNotEmpty ? _lastName.trim() : 'Yuva',
             points: 100,
             savedPosts: [],
             likedPosts: [],
@@ -114,8 +171,8 @@ class _EmailAuthFormState extends State<EmailAuthForm> {
       } catch (e) {
         final fallbackUser = AppUser(
           id: 'user_${DateTime.now().millisecondsSinceEpoch}',
-          firstName: _firstName.trim().isNotEmpty ? _firstName.trim() : 'Climate',
-          lastName: _lastName.trim().isNotEmpty ? _lastName.trim() : 'Hero',
+          firstName: _firstName.trim().isNotEmpty ? _firstName.trim() : 'Green',
+          lastName: _lastName.trim().isNotEmpty ? _lastName.trim() : 'Yuva',
           points: 100,
           savedPosts: [],
           likedPosts: [],
@@ -136,10 +193,12 @@ class _EmailAuthFormState extends State<EmailAuthForm> {
 
   void _continueAsGuest() async {
     final userService = UserService();
+    final displayName = _firstName.trim().isNotEmpty ? _firstName.trim() : 'Green';
+    final displayLast = _lastName.trim().isNotEmpty ? _lastName.trim() : 'Yuva';
     final guestUser = AppUser(
       id: 'guest_${DateTime.now().millisecondsSinceEpoch}',
-      firstName: _firstName.trim().isNotEmpty ? _firstName.trim() : 'Divyani',
-      lastName: _lastName.trim().isNotEmpty ? _lastName.trim() : 'Papalkar',
+      firstName: displayName,
+      lastName: displayLast,
       points: 150,
       savedPosts: [],
       likedPosts: [],
@@ -162,24 +221,22 @@ class _EmailAuthFormState extends State<EmailAuthForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (!_isLogin) ...[
-            _buildNeoInput(
-              hint: 'First Name',
-              icon: Icons.person_outline_rounded,
-              fillColor: AppColors.pureWhite,
-              onSaved: (v) => _firstName = v ?? '',
-              validator: (v) => (v == null || v.isEmpty) ? 'Please enter your first name' : null,
-            ),
-            const SizedBox(height: 12),
-            _buildNeoInput(
-              hint: 'Last Name',
-              icon: Icons.person_outline_rounded,
-              fillColor: AppColors.pureWhite,
-              onSaved: (v) => _lastName = v ?? '',
-              validator: (v) => (v == null || v.isEmpty) ? 'Please enter your last name' : null,
-            ),
-            const SizedBox(height: 12),
-          ],
+          // Full Name Input (Integrated for all users)
+          _buildNeoInput(
+            hint: 'Full Name (e.g. Divyani Papalkar)',
+            icon: Icons.person_outline_rounded,
+            fillColor: AppColors.butterYellow.withValues(alpha: 0.35),
+            onSaved: (v) {
+              _fullName = v ?? '';
+              final parts = _fullName.trim().split(RegExp(r'\s+'));
+              if (parts.isNotEmpty && parts.first.isNotEmpty) {
+                _firstName = parts.first;
+                _lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+              }
+            },
+            validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter your full name' : null,
+          ),
+          const SizedBox(height: 12),
 
           // Email Input (White fill with black outline & shadow)
           _buildNeoInput(

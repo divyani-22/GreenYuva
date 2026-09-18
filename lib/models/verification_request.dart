@@ -49,6 +49,8 @@ class VerificationRequest {
     this.reviewNotes,
   });
 
+  String get missionTitle => itemTitle;
+
   factory VerificationRequest.fromMap(String id, Map<String, dynamic> data) {
     return VerificationRequest(
       id: id,

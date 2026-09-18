@@ -54,3 +54,19 @@ android/local.properties
 android/build/
 .vscode/
 .idx/
+
+# Presentations and package binaries
+*.apk
+*.aab
+*.pptx
+*.ppt
+*.pdf
+*.zip
+*.tar.gz
+
+# Presentation temporary folders & slide caches
+slides_cache/
+slide_backgrounds/
+presentation/
+pptx_renders/
+test_bg_slides/

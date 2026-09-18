@@ -170,13 +170,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             ],
           ),
         ),
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
 
                 Row(
                   children: [
@@ -308,6 +309,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               ],
             ),
           ),
+        ),
         ),
       ),
     );

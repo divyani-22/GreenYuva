@@ -10,6 +10,7 @@ import '../services/user_service.dart';
 import '../utils/transitions.dart';
 import '../theme/app_theme.dart';
 import 'main_screen.dart';
+import 'karma_canteen_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final AppUser user;
@@ -360,40 +361,62 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
             Row(
               children: [
                 Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.butterYellow,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.solidBlack, width: 1.8),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.stars_rounded, color: AppColors.solidBlack, size: 20),
-                        const SizedBox(width: 6),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${user.points}',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.solidBlack,
+                  child: GestureDetector(
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const KarmaCanteenScreen()),
+                      );
+                      _loadUserData();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.butterYellow,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.solidBlack, width: 1.8),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: AppColors.solidBlack,
+                            offset: Offset(2, 2),
+                            blurRadius: 0,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.stars_rounded, color: AppColors.solidBlack, size: 20),
+                          const SizedBox(width: 6),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${user.points}',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppColors.solidBlack,
+                                ),
                               ),
-                            ),
-                            Text(
-                              'Karma Coins',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.solidBlack.withValues(alpha: 0.7),
+                              Row(
+                                children: [
+                                  Text(
+                                    'Karma Coins',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.solidBlack.withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 2),
+                                  const Icon(Icons.open_in_new_rounded, size: 10, color: AppColors.solidBlack),
+                                ],
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -437,6 +460,93 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 12),
+
+            // Dedicated Karma Canteen & Rewards Store entry banner
+            GestureDetector(
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const KarmaCanteenScreen()),
+                );
+                _loadUserData();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.paperCream,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.solidBlack, width: 2.0),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: AppColors.solidBlack,
+                      offset: Offset(2, 2.5),
+                      blurRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(7),
+                      decoration: BoxDecoration(
+                        color: AppColors.butterYellow,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.solidBlack, width: 1.5),
+                      ),
+                      child: const Icon(Icons.storefront_rounded, color: AppColors.solidBlack, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                'Karma Canteen & Perks',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.solidBlack,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                decoration: BoxDecoration(
+                                  color: AppColors.dustyCoral,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: AppColors.solidBlack, width: 1),
+                                ),
+                                child: Text(
+                                  'Redeem',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.solidBlack,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Claim canteen drinks, cycle passes & sapling plaques',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.solidBlack.withValues(alpha: 0.75),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.solidBlack, size: 14),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -532,7 +642,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(18, 8, 18, 40),
+      padding: const EdgeInsets.fromLTRB(18, 8, 18, 120),
       itemCount: _userActions.length,
       itemBuilder: (context, index) {
         final action = _userActions[index];
@@ -636,7 +746,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
     final user = _currentUser ?? widget.user;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(18, 8, 18, 40),
+      padding: const EdgeInsets.fromLTRB(18, 8, 18, 120),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

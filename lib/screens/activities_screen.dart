@@ -168,7 +168,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
     return RefreshIndicator(
       onRefresh: _loadActivities,
       child: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -6,6 +6,7 @@ import '../services/ai_service.dart';
 import '../widgets/ai_message_bubble.dart';
 import '../theme/app_theme.dart';
 import 'main_screen.dart';
+import '../services/language_service.dart';
 
 class AIChatScreen extends StatefulWidget {
   final AppUser user;
@@ -34,9 +35,12 @@ class _AIChatScreenState extends State<AIChatScreen> {
   }
 
   void _addWelcomeMessage() {
+    final bool isHindi = LanguageService.instance.isHindi;
     final welcomeMessage = AIMessage(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      content: 'Namaste! I am ClimaAI (YuvaSathi), your EcoSprint climate tutor and environmental guide. Ask me about Indian campus sustainability, climate action missions, disaster resilience, or quiz preparation!',
+      content: isHindi
+          ? 'नमस्ते! मैं युवा साथी (YuvaSathi) हूँ, आपका ग्रीन युवा पर्यावरण गाइड और जलवायु ट्यूटर। मुझसे भारतीय कैंपस स्थिरता, पर्यावरण मिशन, आपदा प्रबंधन या इको क्विज़ के बारे में कुछ भी पूछें! 🌿'
+          : 'Namaste! I am ClimaAI (YuvaSathi), your Green Yuva climate tutor and environmental guide. Ask me about Indian campus sustainability, climate action missions, disaster resilience, or quiz preparation! 🌿',
       type: MessageType.ai,
       timestamp: DateTime.now(),
       status: MessageStatus.sent,

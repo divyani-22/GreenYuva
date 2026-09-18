@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CacheService {
-  static const String _cachePrefix = 'climacore_cache_';
+  static const String _cachePrefix = 'greenyuva_cache_';
   static const Duration _defaultExpiry = Duration(minutes: 10);
 
   static Future<void> setData(String key, dynamic data, {Duration? expiry}) async {

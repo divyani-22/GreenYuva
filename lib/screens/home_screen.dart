@@ -8,6 +8,7 @@ import '../models/quiz.dart';
 import '../models/ecore.dart';
 import '../models/school.dart';
 import '../services/activity_service.dart';
+import '../services/location_service.dart';
 import '../services/quiz_service.dart';
 import '../services/climagame_service.dart';
 import '../services/school_service.dart';
@@ -22,6 +23,10 @@ import 'notifications_screen.dart';
 import '../utils/transitions.dart';
 import '../theme/app_theme.dart';
 import 'yuvaswap_screen.dart';
+import '../widgets/green_rush_radar_map.dart';
+import '../services/language_service.dart';
+import 'karma_canteen_screen.dart';
+import '../services/aqi_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -46,6 +51,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   final SchoolService _schoolService = SchoolService();
   School? _userSchool;
+  final AqiService _aqiService = AqiService();
+  CityAqiData? _cityAqi;
 
   late AnimationController _entranceController;
   late Animation<double> _fadeAnim;
@@ -65,7 +72,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       CurvedAnimation(parent: _entranceController, curve: Curves.easeOutCubic),
     );
 
+    _currentPosition = LocationService.getDefaultPosition();
+    _mapInitialized = true;
+    _visibleEcores = ClimaGameService.getDefaultCampusEcores();
+    _gameStats = {
+      'conqueredEcores': 2,
+      'inProgressEcores': 3,
+      'totalEcores': 5,
+    };
+    _generateMarkers();
+
     _loadData();
+    _loadAqi();
     _getCurrentLocation();
     _loadUserSchool();
   }
@@ -77,6 +95,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Future<void> _loadData() async {
+    _loadAqi();
     try {
       final results = await Future.wait([
         _loadLatestActivity(),
@@ -95,6 +114,130 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     } catch (e) {
       // Non-critical data loading error
     }
+  }
+
+  Future<void> _loadAqi() async {
+    final cityName = await _aqiService.getSelectedCity();
+    final aqiData = await _aqiService.fetchCityAqi(cityName);
+    if (mounted) {
+      setState(() {
+        _cityAqi = aqiData;
+      });
+    }
+  }
+
+  void _showCitySwitchSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.paperCream,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        side: BorderSide(color: AppColors.solidBlack, width: 2.0),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 48,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: AppColors.solidBlack.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppColors.butterYellow,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.solidBlack, width: 1.5),
+                    ),
+                    child: const Icon(Icons.location_city_rounded, color: AppColors.solidBlack, size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Select Student Hub',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.solidBlack,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              ...AqiService.supportedCities.map((city) {
+                final isCurrent = (_cityAqi?.cityName.toLowerCase() == city.name.toLowerCase());
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: NeoCard(
+                    color: isCurrent ? AppColors.butterYellow : AppColors.cardWhite,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      await _aqiService.setSelectedCity(city.name);
+                      _loadAqi();
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              city.name,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 15,
+                                color: AppColors.solidBlack,
+                              ),
+                            ),
+                            Text(
+                              city.state,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                color: AppColors.mutedText,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (isCurrent)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.solidBlack,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'Active Hub',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                              ),
+                            ),
+                          )
+                        else
+                          const Icon(Icons.chevron_right_rounded, color: AppColors.solidBlack),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<Activity?> _loadLatestActivity() async {
@@ -156,39 +299,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Future<void> _getCurrentLocation() async {
-    try {
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.medium,
-        timeLimit: const Duration(seconds: 4),
-      );
-
-      if (mounted) {
-        setState(() {
-          _currentPosition = position;
-          _mapInitialized = true;
-        });
-        _generateMarkers();
-      }
-    } catch (e) {
-      // Fallback position for India so the map always initializes
-      if (mounted) {
-        setState(() {
-          _currentPosition = Position(
-            latitude: 28.6139,
-            longitude: 77.2090,
-            timestamp: DateTime.now(),
-            accuracy: 100,
-            altitude: 0,
-            altitudeAccuracy: 0,
-            heading: 0,
-            headingAccuracy: 0,
-            speed: 0,
-            speedAccuracy: 0,
-          );
-          _mapInitialized = true;
-        });
-        _generateMarkers();
-      }
+    final position = await LocationService.determinePosition();
+    if (mounted) {
+      setState(() {
+        _currentPosition = position;
+        _mapInitialized = true;
+      });
+      _generateMarkers();
     }
   }
 
@@ -203,7 +320,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
           infoWindow: const InfoWindow(
             title: 'Your Campus Location',
-            snippet: 'Active in EcoSprint',
+            snippet: 'Active in Green Yuva',
           ),
         ),
       );
@@ -284,6 +401,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     _buildStatCardsRow(),
                     const SizedBox(height: 16),
                     _buildWeeklyProgressCard(),
+                    const SizedBox(height: 16),
+                    _buildKarmaCanteenBanner(),
                     const SizedBox(height: 22),
                     _buildFeatureShowcaseGrid(),
                     const SizedBox(height: 22),
@@ -300,8 +419,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  /// Top App Bar matching reference (Avatar left, Hero Brand Logo center, Bell right)
+  /// Top App Bar matching reference (Avatar left, Hero Brand Logo center, Language Switcher + Bell right)
   Widget _buildTopAppBar() {
+    final bool isHindi = LanguageService.instance.isHindi;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -311,8 +432,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             context.navigateWithSlideFromRight(ProfileScreen(user: widget.user));
           },
           child: Container(
-            width: 44,
-            height: 44,
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: AppColors.butterYellow,
@@ -327,13 +448,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
             child: widget.user.profilePic?.isNotEmpty == true
                 ? ClipOval(child: Image.network(widget.user.profilePic!, fit: BoxFit.cover))
-                : const Icon(Icons.person, color: AppColors.solidBlack, size: 24),
+                : const Icon(Icons.person, color: AppColors.solidBlack, size: 22),
           ),
         ),
 
-        // Prominent Hero Brand Title (Noticeably larger, bold editorial font)
+        // Prominent Hero Brand Title
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           decoration: BoxDecoration(
             color: AppColors.butterYellow,
             borderRadius: BorderRadius.circular(16),
@@ -341,7 +462,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             boxShadow: const [
               BoxShadow(
                 color: AppColors.solidBlack,
-                offset: Offset(2.5, 3.0),
+                offset: Offset(2.0, 2.5),
                 blurRadius: 0,
               ),
             ],
@@ -349,12 +470,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.eco_rounded, color: AppColors.solidBlack, size: 22),
-              const SizedBox(width: 8),
+              const Icon(Icons.eco_rounded, color: AppColors.solidBlack, size: 20),
+              const SizedBox(width: 6),
               Text(
-                'EcoSprint',
+                'Green Yuva'.tr,
                 style: GoogleFonts.plusJakartaSans(
-                  fontSize: 22,
+                  fontSize: 18,
                   fontWeight: FontWeight.w900,
                   color: AppColors.solidBlack,
                   letterSpacing: -0.5,
@@ -364,48 +485,118 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ),
         ),
 
-        // Right Notification Bell with 2px black border (Tapping opens NotificationsScreen)
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: AppColors.pureWhite,
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.solidBlack, width: 2.0),
-            boxShadow: const [
-              BoxShadow(
-                color: AppColors.solidBlack,
-                offset: Offset(2.0, 2.5),
-                blurRadius: 0,
+        // Right actions: Language Switcher and Notification Bell
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Quick Language Switcher Button (EN | हिं)
+            GestureDetector(
+              onTap: () async {
+                await LanguageService.instance.toggleLanguage();
+                if (!mounted) return;
+                setState(() {});
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    backgroundColor: AppColors.solidBlack,
+                    behavior: SnackBarBehavior.floating,
+                    duration: const Duration(seconds: 2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(color: AppColors.butterYellow, width: 2.0),
+                    ),
+                    content: Text(
+                      LanguageService.instance.isHindi
+                          ? 'भाषा बदलकर हिंदी कर दी गई है 🇮🇳'
+                          : 'Language switched to English 🌿',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                );
+              },
+              child: Container(
+                height: 42,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                decoration: BoxDecoration(
+                  color: isHindi ? AppColors.butterYellow : AppColors.pureWhite,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.solidBlack, width: 2.0),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: AppColors.solidBlack,
+                      offset: Offset(2.0, 2.0),
+                      blurRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.translate_rounded, size: 15, color: AppColors.solidBlack),
+                      const SizedBox(width: 3),
+                      Text(
+                        isHindi ? 'हिं' : 'EN',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.solidBlack,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ],
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.notifications_none_rounded, color: AppColors.solidBlack, size: 22),
-            onPressed: () async {
-              final targetIndex = await Navigator.push<int>(
-                context,
-                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-              );
-              if (targetIndex != null && mounted) {
-                final mainScreenState = context.findAncestorStateOfType<MainScreenState>();
-                mainScreenState?.onItemTapped(targetIndex);
-              }
-            },
-            padding: EdgeInsets.zero,
-          ),
+            ),
+            const SizedBox(width: 6),
+            // Right Notification Bell with 2px black border (Tapping opens NotificationsScreen)
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: AppColors.pureWhite,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.solidBlack, width: 2.0),
+                boxShadow: const [
+                  BoxShadow(
+                    color: AppColors.solidBlack,
+                    offset: Offset(2.0, 2.5),
+                    blurRadius: 0,
+                  ),
+                ],
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.notifications_none_rounded, color: AppColors.solidBlack, size: 20),
+                onPressed: () async {
+                  final targetIndex = await Navigator.push<int>(
+                    context,
+                    MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                  );
+                  if (targetIndex != null && mounted) {
+                    final mainScreenState = context.findAncestorStateOfType<MainScreenState>();
+                    mainScreenState?.onItemTapped(targetIndex);
+                  }
+                },
+                padding: EdgeInsets.zero,
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  /// Greeting "Hello, Edward." style from reference
+  /// Greeting "Hello, Edward." style from reference with localization
   Widget _buildGreetingHeader() {
+    final bool isHindi = LanguageService.instance.isHindi;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Hello, ${widget.user.displayName}.',
+          isHindi ? 'नमस्ते, ${widget.user.displayName}!' : 'Hello, ${widget.user.displayName}.',
           style: GoogleFonts.plusJakartaSans(
             fontSize: 26,
             fontWeight: FontWeight.w800,
@@ -417,15 +608,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           children: [
             const Icon(Icons.school_outlined, size: 14, color: AppColors.solidBlack),
             const SizedBox(width: 5),
-            Text(
-              _userSchool?.name ?? 'Eco Campus Champion',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AppColors.solidBlack.withValues(alpha: 0.75),
+            Expanded(
+              child: Text(
+                _userSchool?.name ?? 'Eco Campus Champion',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.solidBlack.withValues(alpha: 0.75),
+                ),
               ),
             ),
-            const Spacer(),
+            const SizedBox(width: 8),
             Text(
               _getCurrentDate(),
               style: GoogleFonts.plusJakartaSans(
@@ -434,6 +629,111 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 10),
+        // Live CPCB / AQI City Indicator Neo-Brutalist Badge
+        GestureDetector(
+          onTap: _showCitySwitchSheet,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: _cityAqi?.badgeColor ?? AppColors.sageGreen,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.solidBlack, width: 2.0),
+              boxShadow: const [
+                BoxShadow(
+                  color: AppColors.solidBlack,
+                  offset: Offset(2.5, 3.0),
+                  blurRadius: 0,
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardWhite,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.solidBlack, width: 1.5),
+                  ),
+                  child: Icon(
+                    _cityAqi?.statusIcon ?? Icons.air_rounded,
+                    color: AppColors.solidBlack,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            '${_cityAqi?.cityName ?? "Pune"} AQI Index',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.solidBlack,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: AppColors.cardWhite,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: AppColors.solidBlack, width: 1.0),
+                            ),
+                            child: Text(
+                              _cityAqi?.isLive == true ? 'CPCB LIVE' : 'CPCB DATA',
+                              style: GoogleFonts.spaceMono(
+                                fontSize: 8.5,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.solidBlack,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'AQI ${_cityAqi?.aqi ?? 88} • ${_cityAqi?.categoryLabel ?? "Good"} (${_cityAqi?.status ?? "Clean Air"})',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.solidBlack.withValues(alpha: 0.85),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardWhite,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.solidBlack, width: 1.2),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Hubs',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.solidBlack,
+                        ),
+                      ),
+                      Icon(Icons.arrow_drop_down, size: 14, color: AppColors.solidBlack),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     );
@@ -495,6 +795,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             borderWidth: 2.0,
             shadowOffset: const Offset(3.5, 4.0),
             padding: const EdgeInsets.all(16),
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const KarmaCanteenScreen()),
+              );
+              if (mounted) {
+                _loadData();
+              }
+            },
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -517,13 +826,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  'Karma Coins 🪙',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.solidBlack.withValues(alpha: 0.75),
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      'Karma Coins 🪙',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.solidBlack.withValues(alpha: 0.75),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.open_in_new_rounded, size: 12, color: AppColors.solidBlack),
+                  ],
                 ),
               ],
             ),
@@ -625,6 +940,96 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
+  /// Dedicated Karma Canteen & Rewards Store Promo Banner
+  Widget _buildKarmaCanteenBanner() {
+    return NeoCard(
+      color: AppColors.paperCream,
+      radius: 20,
+      borderWidth: 2.0,
+      shadowOffset: const Offset(3.5, 4.0),
+      padding: const EdgeInsets.all(16),
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const KarmaCanteenScreen()),
+        );
+        if (mounted) {
+          _loadData();
+        }
+      },
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.butterYellow,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.solidBlack, width: 2.0),
+            ),
+            child: const Icon(Icons.storefront_rounded, color: AppColors.solidBlack, size: 28),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Karma Canteen & Perks',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.solidBlack,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.dustyCoral,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: AppColors.solidBlack, width: 1.0),
+                      ),
+                      child: Text(
+                        'NEW',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.solidBlack,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Redeem tea in steel tumblers, cycle passes, 15% book barter discounts & tree plaques!',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.solidBlack.withValues(alpha: 0.8),
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.cardWhite,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.solidBlack, width: 1.8),
+            ),
+            child: const Icon(Icons.arrow_forward_rounded, size: 16, color: AppColors.solidBlack),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Showcase Grid for the 4 core modules with rich imagery
   Widget _buildFeatureShowcaseGrid() {
     return Column(
@@ -634,7 +1039,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'EcoSprint Hubs',
+              'Green Yuva Hubs',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
@@ -862,21 +1267,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               borderRadius: BorderRadius.circular(16),
               child: Stack(
                 children: [
-                  if (_mapInitialized && _currentPosition != null)
-                    GoogleMap(
-                      onMapCreated: (controller) {},
-                      initialCameraPosition: CameraPosition(
-                        target: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-                        zoom: 14.0,
-                      ),
-                      markers: _cachedMarkers,
-                      myLocationEnabled: false,
-                      myLocationButtonEnabled: false,
-                      zoomControlsEnabled: false,
-                      mapToolbarEnabled: false,
-                    )
-                  else
-                    _buildRadarVisualFallback(),
+                  Positioned.fill(
+                    child: GreenRushRadarMap(
+                      ecores: _visibleEcores.isNotEmpty
+                          ? _visibleEcores
+                          : ClimaGameService.getDefaultCampusEcores(),
+                      userLocation: _currentPosition != null
+                          ? LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
+                          : const LatLng(18.5204, 73.8567),
+                      isCompact: true,
+                      onOpenFullMap: _openClimaGames,
+                    ),
+                  ),
 
                   // Overlay status card
                   Positioned(
@@ -1258,7 +1660,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   void _openQuiz(Quiz quiz) {
-    context.navigateWithCard(QuizDetailScreen(quiz: quiz));
+    context.navigateWithCard(QuizDetailScreen(quiz: quiz, user: widget.user));
   }
 
   void _openClimaGames() {

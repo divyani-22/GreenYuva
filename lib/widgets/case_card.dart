@@ -104,21 +104,44 @@ class CaseCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: AppColors.mintGreen,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.solidBlack, width: 1.5),
-                        ),
-                        child: Text(
-                          caseData.impact,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.solidBlack,
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          if (caseData.location.toLowerCase().contains('india'))
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                              decoration: BoxDecoration(
+                                color: AppColors.butterYellow,
+                                borderRadius: BorderRadius.circular(7),
+                                border: Border.all(color: AppColors.solidBlack, width: 1.4),
+                              ),
+                              child: Text(
+                                '🇮🇳 India Action',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.solidBlack,
+                                ),
+                              ),
+                            ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                            decoration: BoxDecoration(
+                              color: AppColors.mintGreen,
+                              borderRadius: BorderRadius.circular(7),
+                              border: Border.all(color: AppColors.solidBlack, width: 1.4),
+                            ),
+                            child: Text(
+                              caseData.impact,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.solidBlack,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),

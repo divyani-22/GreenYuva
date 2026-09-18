@@ -428,12 +428,12 @@ class _YuvaSwapScreenState extends State<YuvaSwapScreen>
         else
           ...items.map((item) => _buildItemCard(item)),
 
-        const SizedBox(height: 80),
+        const SizedBox(height: 120), // Padding for floating bottom navbar
       ],
     );
   }
 
-  Widget _buildItemCard(SwapItem item) {
+  Widget _buildItemCard(SwapItem item, {bool isMyListing = false, YuvaSwapService? swapService}) {
     return NeoCard(
       radius: 18,
       margin: const EdgeInsets.only(bottom: 14),
@@ -547,15 +547,19 @@ class _YuvaSwapScreenState extends State<YuvaSwapScreen>
                   children: [
                     const Icon(Icons.recycling_rounded, size: 14, color: AppColors.solidBlack),
                     const SizedBox(width: 4),
-                    Text(
-                      'Saves ~${item.wasteDivertedKg}kg waste',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.solidBlack,
+                    Expanded(
+                      child: Text(
+                        'Saves ~${item.wasteDivertedKg}kg waste',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.solidBlack,
+                        ),
                       ),
                     ),
-                    const Spacer(),
+                    const SizedBox(width: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
@@ -564,7 +568,7 @@ class _YuvaSwapScreenState extends State<YuvaSwapScreen>
                         border: Border.all(color: AppColors.solidBlack, width: 1.2),
                       ),
                       child: Text(
-                        '${item.donorKarmaScore} Karma Coins',
+                        '${item.donorKarmaScore} Karma',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
@@ -574,6 +578,61 @@ class _YuvaSwapScreenState extends State<YuvaSwapScreen>
                     ),
                   ],
                 ),
+                if (isMyListing && item.status != 'completed') ...[
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: () {
+                      swapService?.markCompleted(item.id);
+                      setState(() {});
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('🎉 Handover completed! Thank you for reducing campus waste.'),
+                          backgroundColor: AppColors.mintGreen,
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: AppColors.mintGreen,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.solidBlack, width: 1.5),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: AppColors.solidBlack,
+                            offset: Offset(1.5, 1.5),
+                            blurRadius: 0,
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        '✓ Mark Handover Complete',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.solidBlack,
+                        ),
+                      ),
+                    ),
+                  ),
+                ] else if (isMyListing && item.status == 'completed') ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.mintGreen.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '✓ Completed & Handed Over',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.forestGreen,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -612,7 +671,7 @@ class _YuvaSwapScreenState extends State<YuvaSwapScreen>
             ),
           )
         else
-          ...listings.map((item) => _buildItemCard(item)),
+          ...listings.map((item) => _buildItemCard(item, isMyListing: true, swapService: swapService)),
 
         const SizedBox(height: 24),
         Text(

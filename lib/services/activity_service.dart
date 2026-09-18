@@ -261,7 +261,7 @@ Over 180 PCCOE students and faculty rode their pedal bicycles and electric two-w
 We conducted roadside tailpipe emission surveys and distributed informational brochures on public transport integration.
 Demonstrated the carbon offset achieved when commuters switch from single-occupancy petrol scooters to cycles.
 Culminated in a signing of the PCCOE Active Commuter Charter to install 50 additional sheltered bicycle racks on campus.
-Participants logged real-time GPS routes via the EcoSprint app to quantify collective fuel savings of 84 liters.
+Participants logged real-time GPS routes via the Green Yuva app to quantify collective fuel savings of 84 liters.
 Refreshments, healthy fruit snacks, and cycle tune-up services were sponsored by local cycling clubs.
 Check the photos, badge awards, and leaderboards to see how your hostel wing ranked in total active kilometers!""",
           "location": "Akurdi Railway Station to PCCOE Main Gate, Pune",
@@ -411,7 +411,7 @@ Mapped 420 heritage mature trees including century-old Rain Trees, Gulmohars, Ta
 Students measured tree diameter at breast height (DBH), total canopy spread, and estimated biomass carbon sequestration.
 Generated QR-code plaques mounted on trees linking to botanical data, medicinal uses, and bird nesting records.
 Discovered that COEP's urban canopy sequesters over 65 metric tons of atmospheric carbon dioxide each year.
-The digital campus green map was officially integrated into the Pune Open Data initiative and EcoSprint portal.
+The digital campus green map was officially integrated into the Pune Open Data initiative and Green Yuva portal.
 Great collaborative effort between first-year student volunteers and senior environmental researchers.
 Check out the interactive map on the YuvaVibe feed to view tree profiles right outside your lecture hall!""",
           "location": "Entire COEP Academic Campus, Shivajinagar, Pune",
@@ -981,7 +981,7 @@ Earn 470 GreenKarma coins and gain firsthand experience in utility-scale solar a
           "imageUrl": "assets/images/cooking.png",
           "description": """Inaugurate the VIIT 'Rent-a-Tumbler' zero-waste initiative across all campus snack shops and tea stalls.
 Distribute 500 food-grade stainless steel cups and lunch containers, replacing disposable paper and plastic cups.
-Students scan an NFC tag with the EcoSprint app to borrow a sanitized tumbler, returning it to collection bins after use.
+Students scan an NFC tag with the Green Yuva app to borrow a sanitized tumbler, returning it to collection bins after use.
 Volunteers will monitor kiosk stations, educate incoming students on microplastics, and oversee sanitation cycles.
 Eliminates an estimated 1,400 disposable plastic cups from campus trash bins every single working day.
 Calculate the reduced solid waste disposal fees and municipal hauling carbon footprint.
@@ -1406,7 +1406,7 @@ Miyawaki micro-forests grow 10x faster and absorb up to 30x more carbon dioxide 
 Protective gardening gloves, spades, and refreshments provided.
 Earn 600 GreenKarma coins and build a permanent ecological asset for future campus generations.""",
         "location": "Campus Sports Complex (North Field)",
-        "communityName": "EcoSprint Green Brigade",
+        "communityName": "Green Yuva Green Brigade",
         "mapUrl": "https://maps.google.com/?q=Campus+Sports+Grounds",
         "isUpcoming": true,
         "isCompleted": false,
@@ -1449,9 +1449,9 @@ Successfully replaced single-use polythene wrappers and disposable plastic cups 
 Students conducted interactive awareness kiosks educating peers on ocean microplastic pollution.
 Audit showed a 75% drop in single-use plastic waste generation in campus trash bins over one week.
 Volunteers helped set up a permanent bag sharing station at the campus student convenience store.
-Check out the event gallery and your GreenKarma badge rewards in the EcoSprint profile!""",
+Check out the event gallery and your GreenKarma badge rewards in the Green Yuva profile!""",
         "location": "Student Activity Centre & Food Court",
-        "communityName": "EcoSprint Action League",
+        "communityName": "Green Yuva Action League",
         "mapUrl": "https://maps.google.com/?q=Student+Activity+Centre",
         "isUpcoming": false,
         "isCompleted": true,

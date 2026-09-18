@@ -2,6 +2,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationService {
   static const String _notificationKey = 'notifications_enabled';
+  static final NotificationService instance = NotificationService._internal();
+
+  factory NotificationService() => instance;
+  NotificationService._internal();
 
   Future<bool> isNotificationsEnabled() async {
     try {
@@ -13,27 +17,18 @@ class NotificationService {
     }
   }
 
-  Future<void> enableNotifications() async {
+  Future<void> setNotificationsEnabled(bool enabled) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_notificationKey, true);
-      print('✅ NotificationService: Notifications enabled');
+      await prefs.setBool(_notificationKey, enabled);
+      print('✅ NotificationService: Notifications set to $enabled');
     } catch (e) {
-      print('❌ NotificationService: Error enabling notifications: $e');
-      rethrow;
+      print('❌ NotificationService: Error updating notification preference: $e');
     }
   }
 
-  Future<void> disableNotifications() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_notificationKey, false);
-      print('✅ NotificationService: Notifications disabled');
-    } catch (e) {
-      print('❌ NotificationService: Error disabling notifications: $e');
-      rethrow;
-    }
-  }
+  Future<void> enableNotifications() async => setNotificationsEnabled(true);
+  Future<void> disableNotifications() async => setNotificationsEnabled(false);
 
   Future<void> sendNotification({
     required String title,
@@ -44,10 +39,33 @@ class NotificationService {
       final isEnabled = await isNotificationsEnabled();
       if (!isEnabled) return;
 
-      print('📱 NotificationService: Sending notification - $title: $body');
-
+      print('📱 [Push Notification] $title — $body (Payload: $payload)');
     } catch (e) {
       print('❌ NotificationService: Error sending notification: $e');
     }
+  }
+
+  Future<void> sendDailyStreakReminder() async {
+    await sendNotification(
+      title: '🔥 Keep Your Green Streak Alive!',
+      body: 'Complete today\'s GreenRush mission to earn +50 Karma Coins and maintain your campus rank.',
+      payload: 'streak_reminder',
+    );
+  }
+
+  Future<void> sendMissionApprovedNotification(String missionTitle, int points) async {
+    await sendNotification(
+      title: '🌟 Mission Proof Approved!',
+      body: 'Your proof for "$missionTitle" was verified! +$points Karma Coins awarded.',
+      payload: 'mission_approved',
+    );
+  }
+
+  Future<void> sendSwapNotification(String itemTitle) async {
+    await sendNotification(
+      title: '♻️ YuvaSwap Request Update',
+      body: 'Someone is interested in your listing "$itemTitle". Tap to coordinate handover.',
+      payload: 'swap_update',
+    );
   }
 }

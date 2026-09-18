@@ -78,4 +78,34 @@ class AppUser {
       'weekGoal': weekGoal,
     };
   }
+
+  AppUser copyWith({
+    String? id,
+    String? firstName,
+    String? lastName,
+    String? joinedSchoolId,
+    int? points,
+    List<String>? savedPosts,
+    List<String>? likedPosts,
+    String? profilePic,
+    int? actions,
+    int? streak,
+    int? weekPoints,
+    int? weekGoal,
+  }) {
+    return AppUser(
+      id: id ?? this.id,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      joinedSchoolId: joinedSchoolId ?? this.joinedSchoolId,
+      points: points ?? this.points,
+      savedPosts: savedPosts ?? this.savedPosts,
+      likedPosts: likedPosts ?? this.likedPosts,
+      profilePic: profilePic ?? this.profilePic,
+      actions: actions ?? this.actions,
+      streak: streak ?? this.streak,
+      weekPoints: weekPoints ?? this.weekPoints,
+      weekGoal: weekGoal ?? this.weekGoal,
+    );
+  }
 }

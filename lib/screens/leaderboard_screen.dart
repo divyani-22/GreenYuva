@@ -1131,6 +1131,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
             ),
           );
         }).toList(),
+        const SizedBox(height: 100), // padding for floating nav bar
       ],
     );
   }

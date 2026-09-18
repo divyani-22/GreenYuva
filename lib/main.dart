@@ -29,9 +29,11 @@ import 'utils/performance_optimizer.dart';
 import 'utils/android_optimizer.dart';
 import 'utils/performance_monitor.dart';
 import 'utils/android_map_optimizer.dart';
+import 'services/language_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await LanguageService.instance.init();
 
   FlutterError.onError = (FlutterErrorDetails details) {
     print('🚨 Flutter Error: ${details.exception}');
@@ -86,21 +88,22 @@ void main() async {
     print('⚠️ Firebase initialization skipped or failed: $e');
   }
 
-  try {
-    await RunMigration.fixWeeklyPoints();
-  } catch (e) {
-    print('⚠️ RunMigration skipped or failed: $e');
-  }
+  runApp(const GreenYuvaApp());
 
-  runApp(ClimaCore());
 }
 
-class ClimaCore extends StatelessWidget {
+class GreenYuvaApp extends StatelessWidget {
+  const GreenYuvaApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'EcoSprint',
+    return AnimatedBuilder(
+      animation: LanguageService.instance,
+      builder: (context, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Green Yuva',
+          locale: Locale(LanguageService.instance.currentLanguageCode),
       initialRoute: '/',
       onGenerateRoute: (settings) {
         switch (settings.name) {
@@ -119,6 +122,7 @@ class ClimaCore extends StatelessWidget {
               quizScreen = QuizDetailScreen(
                 quiz: args['quiz'],
                 attempt: args['attempt'],
+                user: args['user'],
               );
             } else if (args is Quiz) {
               quizScreen = QuizDetailScreen(quiz: args);
@@ -181,6 +185,8 @@ class ClimaCore extends StatelessWidget {
           ),
           child: child!,
         );
+      },
+    );
       },
     );
   }

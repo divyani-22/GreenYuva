@@ -7,10 +7,12 @@ import 'package:geolocator/geolocator.dart';
 import '../models/ecore.dart';
 import '../models/user.dart';
 import '../services/climagame_service.dart';
+import '../services/location_service.dart';
 import '../widgets/ecore_mission_modal.dart';
 import '../theme/app_theme.dart';
 import 'main_screen.dart';
 import 'climaconnect_screen.dart';
+import '../widgets/green_rush_radar_map.dart';
 
 class ClimaGameScreen extends StatefulWidget {
   final AppUser user;
@@ -39,6 +41,11 @@ class _ClimaGameScreenState extends State<ClimaGameScreen> with SingleTickerProv
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _visibleEcores = ClimaGameService.getDefaultCampusEcores();
+    if (_visibleEcores.isNotEmpty) {
+      _selectedEcore = _visibleEcores.first;
+    }
+    _buildMarkers(_visibleEcores);
     _loadData();
     _tryGetRealLocation();
   }
@@ -52,20 +59,15 @@ class _ClimaGameScreenState extends State<ClimaGameScreen> with SingleTickerProv
 
   Future<void> _tryGetRealLocation() async {
     try {
-      final permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
-        final pos = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.medium,
-          timeLimit: const Duration(seconds: 4),
+      final pos = await LocationService.determinePosition();
+      if (mounted) {
+        setState(() {
+          _initialPosition = LatLng(pos.latitude, pos.longitude);
+        });
+        _buildMarkers(_visibleEcores);
+        _mapController?.animateCamera(
+          CameraUpdate.newLatLngZoom(_initialPosition, 14.0),
         );
-        if (mounted) {
-          setState(() {
-            _initialPosition = LatLng(pos.latitude, pos.longitude);
-          });
-          _mapController?.animateCamera(
-            CameraUpdate.newLatLngZoom(_initialPosition, 14.0),
-          );
-        }
       }
     } catch (_) {}
   }
@@ -101,7 +103,7 @@ class _ClimaGameScreenState extends State<ClimaGameScreen> with SingleTickerProv
         markerId: const MarkerId('user_location'),
         position: _initialPosition,
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-        infoWindow: const InfoWindow(title: 'Your Location', snippet: 'EcoSprint Active'),
+        infoWindow: const InfoWindow(title: 'Your Location', snippet: 'Green Yuva Active'),
       ),
     );
 
@@ -131,9 +133,13 @@ class _ClimaGameScreenState extends State<ClimaGameScreen> with SingleTickerProv
       );
     }
 
-    setState(() {
+    if (mounted) {
+      setState(() {
+        _ecoreMarkers = markers;
+      });
+    } else {
       _ecoreMarkers = markers;
-    });
+    }
   }
 
   void _openMissionModal(Ecore ecore) {
@@ -303,111 +309,27 @@ class _ClimaGameScreenState extends State<ClimaGameScreen> with SingleTickerProv
   Widget _buildMapTab() {
     return Stack(
       children: [
-        // Google Map
-        GoogleMap(
-          onMapCreated: (controller) => _mapController = controller,
-          initialCameraPosition: CameraPosition(
-            target: _initialPosition,
-            zoom: 12.5,
-          ),
-          markers: _ecoreMarkers,
-          zoomControlsEnabled: false,
-          myLocationButtonEnabled: false,
-          compassEnabled: true,
-        ),
-
-        // Map Control Floating Buttons (Top Right)
-        Positioned(
-          top: 12,
-          right: 14,
-          child: Column(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  _mapController?.animateCamera(
-                    CameraUpdate.newCameraPosition(
-                      const CameraPosition(target: LatLng(21.5, 78.9629), zoom: 4.8),
-                    ),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.butterYellow,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.solidBlack, width: 1.8),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: AppColors.solidBlack,
-                        offset: Offset(2, 2),
-                        blurRadius: 0,
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.public_rounded, size: 16, color: AppColors.solidBlack),
-                      const SizedBox(width: 4),
-                      Text(
-                        'All India',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.solidBlack,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              GestureDetector(
-                onTap: () {
-                  _mapController?.animateCamera(
-                    CameraUpdate.newCameraPosition(
-                      CameraPosition(target: _initialPosition, zoom: 14.5),
-                    ),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.pureWhite,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.solidBlack, width: 1.8),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: AppColors.solidBlack,
-                        offset: Offset(2, 2),
-                        blurRadius: 0,
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.my_location_rounded, size: 16, color: AppColors.solidBlack),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Campus',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.solidBlack,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+        // Interactive GreenRush Tactical Radar & Map
+        Positioned.fill(
+          child: GreenRushRadarMap(
+            ecores: _visibleEcores.isNotEmpty
+                ? _visibleEcores
+                : ClimaGameService.getDefaultCampusEcores(),
+            userLocation: _initialPosition,
+            selectedEcore: _selectedEcore,
+            isCompact: false,
+            onEcoreTap: (ecore) {
+              setState(() {
+                _selectedEcore = ecore;
+              });
+              _openMissionModal(ecore);
+            },
           ),
         ),
 
         // Action Hub Horizontal Carousel at Bottom
         Positioned(
-          bottom: 16,
+          bottom: 105, // Elevated above floating bottom navbar
           left: 0,
           right: 0,
           child: SizedBox(

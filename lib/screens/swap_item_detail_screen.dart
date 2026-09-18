@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/swap_item.dart';
 import '../services/yuvaswap_service.dart';
 import '../theme/app_theme.dart';
@@ -119,37 +121,14 @@ class _SwapItemDetailScreenState extends State<SwapItemDetailScreen> {
                 color: AppColors.butterYellow,
                 textColor: AppColors.solidBlack,
                 onPressed: () {
+                  final note = _msgController.text;
                   YuvaSwapService().requestItem(
                     widget.item.id,
-                    _msgController.text,
+                    note,
                   );
                   Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: AppColors.solidBlack,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: const BorderSide(color: AppColors.butterYellow, width: 2),
-                      ),
-                      content: Row(
-                        children: [
-                          const Icon(Icons.check_circle_rounded, color: AppColors.butterYellow),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Request sent to ${widget.item.donorName}! +25 GreenKarma!',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
                   setState(() {});
+                  _showExchangeCoordinatorDialog(context, note);
                 },
               ),
               const SizedBox(height: 12),
@@ -157,6 +136,268 @@ class _SwapItemDetailScreenState extends State<SwapItemDetailScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  void _showExchangeCoordinatorDialog(BuildContext context, String userNote) {
+    final cleanNote = userNote.trim().isNotEmpty
+        ? userNote.trim()
+        : 'Can we meet at the campus library or canteen to coordinate handover?';
+    final messageText =
+        'Hi ${widget.item.donorName}! I requested your item "${widget.item.title}" on GreenYuva YuvaSwap. $cleanNote';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardWhite,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+          side: const BorderSide(color: AppColors.solidBlack, width: 2.0),
+        ),
+        titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        actionsPadding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.sageGreen,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.solidBlack, width: 1.5),
+              ),
+              child: const Icon(Icons.handshake_rounded, color: AppColors.solidBlack, size: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Campus Exchange',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 17,
+                      color: AppColors.solidBlack,
+                    ),
+                  ),
+                  Text(
+                    'Request sent • +25 Karma Coins! 🪙',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.leafGreen,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Coordinate handover directly with ${widget.item.donorName}:',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.solidBlack,
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Pre-filled Handover Note Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.paperCream,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.solidBlack, width: 1.8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'HANDOVER MESSAGE',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.1,
+                            color: AppColors.mutedText,
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () {
+                            Clipboard.setData(ClipboardData(text: messageText));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Message copied to clipboard!'),
+                                duration: Duration(seconds: 2),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          },
+                          child: const Row(
+                            children: [
+                              Icon(Icons.copy_rounded, size: 14, color: AppColors.solidBlack),
+                              SizedBox(width: 4),
+                              Text(
+                                'Copy Note',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.solidBlack,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    SelectableText(
+                      messageText,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.solidBlack,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // WhatsApp Chat Button
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF25D366),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  minimumSize: const Size(double.infinity, 44),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: const BorderSide(color: AppColors.solidBlack, width: 2.0),
+                  ),
+                ),
+                onPressed: () async {
+                  final waUrl = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(messageText)}');
+                  try {
+                    await launchUrl(waUrl, mode: LaunchMode.externalApplication);
+                  } catch (e) {
+                    Clipboard.setData(ClipboardData(text: messageText));
+                    if (ctx.mounted) {
+                      ScaffoldMessenger.of(ctx).showSnackBar(
+                        const SnackBar(
+                          content: Text('Could not launch WhatsApp. Note copied to clipboard!'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.chat_bubble_rounded, size: 18, color: Colors.white),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Open WhatsApp Chat',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Campus Handover Checklist
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.butterYellow.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.solidBlack, width: 1.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.verified_user_outlined, size: 16, color: AppColors.solidBlack),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Campus Handover Checklist',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.solidBlack,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    _buildChecklistRow(Icons.place_outlined, 'Meet in public zones (Canteen, Library, SAC)'),
+                    const SizedBox(height: 4),
+                    _buildChecklistRow(Icons.check_box_outlined, 'Inspect item condition before accepting'),
+                    const SizedBox(height: 4),
+                    _buildChecklistRow(Icons.money_off_rounded, 'Zero cash exchange — 100% circular campus barter'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.cardWhite,
+              foregroundColor: AppColors.solidBlack,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: AppColors.solidBlack, width: 1.5),
+              ),
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Done',
+              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChecklistRow(IconData icon, String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 14, color: AppColors.solidBlack),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppColors.solidBlack.withValues(alpha: 0.85),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

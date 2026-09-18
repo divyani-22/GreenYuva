@@ -76,10 +76,10 @@ class _ProfilePictureUploadScreenState extends State<ProfilePictureUploadScreen>
 
     _fadeController.forward();
     Future.delayed(const Duration(milliseconds: 200), () {
-      _slideController.forward();
+      if (mounted) _slideController.forward();
     });
     Future.delayed(const Duration(milliseconds: 400), () {
-      _scaleController.forward();
+      if (mounted) _scaleController.forward();
     });
     _loadCurrentProfilePicture();
   }
@@ -426,19 +426,17 @@ class _ProfilePictureUploadScreenState extends State<ProfilePictureUploadScreen>
                   ),
           ),
         ),
-        if (!widget.isFromRegistration) ...[
-          const SizedBox(height: 15),
-          TextButton(
-            onPressed: _isLoading ? null : _skipForNow,
-            child: Text(
-              'Skip for now',
-              style: GoogleFonts.questrial(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
+        const SizedBox(height: 15),
+        TextButton(
+          onPressed: _isLoading ? null : _skipForNow,
+          child: Text(
+            'Skip for now',
+            style: GoogleFonts.questrial(
+              fontSize: 16,
+              color: Colors.grey[600],
             ),
           ),
-        ],
+        ),
       ],
     );
   }

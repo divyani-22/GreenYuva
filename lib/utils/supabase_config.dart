@@ -25,7 +25,7 @@ class SupabaseConfig {
 }
 
 class SupabaseImageService {
-  static const String bucketName = 'climacore-images';
+  static const String bucketName = 'avatars';
 
   static Future<String> uploadImage({
     required Uint8List imageBytes,
@@ -80,10 +80,15 @@ class SupabaseImageService {
 
   static Future<void> deleteImage(String imageUrl) async {
     try {
-
       final uri = Uri.parse(imageUrl);
       final pathSegments = uri.pathSegments;
-      final filePath = pathSegments.sublist(pathSegments.length - 2).join('/');
+      // Find bucket name in path and take everything after it
+      final bucketIndex = pathSegments.indexOf(bucketName);
+      if (bucketIndex == -1 || bucketIndex >= pathSegments.length - 1) {
+        print('⚠️ Warning: Could not find bucket path in URL: $imageUrl');
+        return;
+      }
+      final filePath = pathSegments.sublist(bucketIndex + 1).join('/');
 
       await SupabaseConfig.client.storage
           .from(bucketName)

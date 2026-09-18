@@ -1,6 +1,6 @@
 class AppConstants {
-  static const String appName = "EcoSprint";
-  static const String appTagline = "Quick challenges and real-world actions";
+  static const String appName = "Green Yuva";
+  static const String appTagline = "Youth Climate Action & Real-World Impact";
   static const String appLogoPath = "assets/images/logo.png";
   static const String defaultProfilePicPath = "assets/images/pfp.svg";
 

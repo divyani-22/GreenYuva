@@ -58,7 +58,8 @@ class _AdminAccessScreenState extends State<AdminAccessScreen> {
         foregroundColor: Colors.black,
         elevation: 0,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
+        child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -183,6 +184,7 @@ class _AdminAccessScreenState extends State<AdminAccessScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

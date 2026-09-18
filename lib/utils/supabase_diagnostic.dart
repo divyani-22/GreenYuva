@@ -102,15 +102,15 @@ class SupabaseDiagnostic {
       }
 
       final buckets = await SupabaseConfig.client.storage.listBuckets();
-      final bucketExists = buckets.any((bucket) => bucket.name == 'climacore-images');
+      final bucketExists = buckets.any((bucket) => bucket.name == 'avatars');
 
       results['exists'] = bucketExists;
-      results['bucketName'] = 'climacore-images';
+      results['bucketName'] = 'avatars';
 
       if (bucketExists) {
-        print('✅ Storage bucket "climacore-images" exists');
+        print('✅ Storage bucket "avatars" exists');
       } else {
-        print('❌ Storage bucket "climacore-images" not found');
+        print('❌ Storage bucket "avatars" not found');
         results['suggestion'] = 'Create the bucket manually in Supabase dashboard';
       }
     } catch (e) {
@@ -133,7 +133,7 @@ class SupabaseDiagnostic {
       }
 
       try {
-        await SupabaseConfig.client.storage.from('climacore-images').list();
+        await SupabaseConfig.client.storage.from('avatars').list();
         results['canList'] = true;
         results['canUpload'] = true;
         print('✅ Storage permissions test passed');
@@ -228,7 +228,7 @@ class SupabaseDiagnostic {
         report.writeln('• Check Supabase project status and API key permissions');
       }
       if (!bucket['exists']) {
-        report.writeln('• Create "climacore-images" bucket in Supabase dashboard');
+        report.writeln('• Create "avatars" bucket in Supabase dashboard');
       }
       if (!permissions['canUpload']) {
         report.writeln('• Configure storage policies in Supabase dashboard');

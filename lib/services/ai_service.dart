@@ -202,7 +202,7 @@ $recentMessages
 
 Student's current question: $message
 
-Please provide a direct, helpful, and factually rich response. Explain key points clearly with relevant Indian climate context or EcoSprint platform guidance when applicable.
+Please provide a direct, helpful, and factually rich response. Explain key points clearly with relevant Indian climate context or Green Yuva platform guidance when applicable.
 ''';
   }
 

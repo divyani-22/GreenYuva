@@ -18,13 +18,13 @@
 -keep class io.supabase.** { *; }
 
 # Keep model classes
--keep class com.example.climacore.models.** { *; }
+-keep class com.greenyuva.app.models.** { *; }
 
 # Keep service classes
--keep class com.example.climacore.services.** { *; }
+-keep class com.greenyuva.app.services.** { *; }
 
 # Keep utility classes
--keep class com.example.climacore.utils.** { *; }
+-keep class com.greenyuva.app.utils.** { *; }
 
 # Remove logging in release
 -assumenosideeffects class android.util.Log {

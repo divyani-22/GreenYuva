@@ -45,53 +45,42 @@ class CaseService {
   }
 
   static Future<List<Case>> getCasesWithFallback() async {
+    final indianCases = _createSampleCases();
+    final List<Case> additionalCases = [];
+
     try {
-      print('📰 CaseService: Fetching cases with API fallback...');
-
-      print('🔍 CaseService: Trying APIs first...');
-      try {
-        final newsApiCases = await _fetchFromNewsAPI();
-        if (newsApiCases.isNotEmpty) {
-          print('✅ CaseService: Fetched ${newsApiCases.length} cases from NewsAPI');
-
-          for (final caseData in newsApiCases) {
-            await _saveCaseToFirebase(caseData);
-          }
-          return newsApiCases;
+      print('📰 CaseService: Fetching cases from Firebase...');
+      final firebaseCases = await getCases();
+      for (final c in firebaseCases) {
+        final isDuplicate = indianCases.any((ic) =>
+            ic.personName.toLowerCase().trim() == c.personName.toLowerCase().trim() ||
+            ic.story.toLowerCase().trim() == c.story.toLowerCase().trim());
+        if (!isDuplicate) {
+          additionalCases.add(c);
         }
-      } catch (e) {
-        print('❌ CaseService: NewsAPI error: $e');
       }
+    } catch (e) {
+      print('⚠️ CaseService: Firebase fetch error: $e');
+    }
 
+    if (additionalCases.isEmpty) {
       try {
         final gNewsCases = await _fetchFromGNews();
-        if (gNewsCases.isNotEmpty) {
-          print('✅ CaseService: Fetched ${gNewsCases.length} cases from GNews');
-
-          for (final caseData in gNewsCases) {
-            await _saveCaseToFirebase(caseData);
+        for (final c in gNewsCases) {
+          final isDuplicate = indianCases.any((ic) =>
+              ic.personName.toLowerCase().trim() == c.personName.toLowerCase().trim());
+          if (!isDuplicate) {
+            additionalCases.add(c);
           }
-          return gNewsCases;
         }
       } catch (e) {
-        print('❌ CaseService: GNews error: $e');
+        print('⚠️ CaseService: GNews fetch error: $e');
       }
-
-      print('⚠️ CaseService: APIs failed, trying Firebase...');
-      final firebaseCases = await getCases();
-      if (firebaseCases.isNotEmpty) {
-        print('✅ CaseService: Found ${firebaseCases.length} cases in Firebase');
-        return firebaseCases;
-      }
-
-      print('⚠️ CaseService: All sources failed, populating Firebase with sample data...');
-      await populateFirebaseWithSampleCases();
-      return await getCases();
-
-    } catch (e) {
-      print('❌ CaseService: Error in getCasesWithFallback: $e');
-      return _createSampleCases();
     }
+
+    // ALWAYS return authentic Indian climate cases FIRST, followed by additional remote cases
+    print('✅ CaseService: Returning ${indianCases.length} Indian cases + ${additionalCases.length} additional cases');
+    return [...indianCases, ...additionalCases];
   }
 
   static Future<void> populateFirebaseWithSampleCases() async {
@@ -129,97 +118,99 @@ class CaseService {
     }
   }
 
-    static List<Case> _createSampleCases() {
+  static List<Case> getIndianCases() => _createSampleCases();
+
+  static List<Case> _createSampleCases() {
     return [
       Case(
-        id: 'case_1',
-        personName: 'Dr. Roxy Mathew Koll',
-        story: 'Indian Ocean warming, marine heatwaves, and changing monsoon rainfall extremes',
-        climateEvent: 'Ocean Warming & Cyclone Dynamics',
-        location: 'Pune, Maharashtra, India',
-        impact: 'IPCC Lead Author',
+        id: 'indian_case_1',
+        personName: 'Rewa Ultra Mega Solar Park',
+        story: 'Asia\'s flagship 750 MW single-site solar power project powering Delhi Metro and reducing 1.5M tonnes of CO₂ annually.',
+        climateEvent: 'Solar Energy & Grid Decarbonization',
+        location: 'Rewa, Madhya Pradesh, India',
+        impact: '750 MW Capacity',
         date: DateTime.now().subtract(const Duration(days: 1)),
-        sourceUrl: 'https://rocksea.org/',
-        imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
+        sourceUrl: 'https://rewa.nic.in/',
+        imageUrl: 'https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=600&q=80',
         severity: 'high',
-        source: 'IITM Pune',
+        source: 'Rewa Ultra Mega Solar Ltd (RUMSL)',
         isReviewed: true,
-        description: 'Climate scientist at the Indian Institute of Tropical Meteorology (IITM) Pune, leading pioneering studies on Indian Ocean surface temperature rise and supercharged cyclone forecasting.',
+        description: 'Pioneered utility-scale solar generation in India. Provides clean power to the Delhi Metro Rail Corporation (DMRC), setting benchmark low solar tariffs across South Asia.',
       ),
       Case(
-        id: 'case_2',
-        personName: 'Dr. Sunita Narain',
-        story: 'Pioneering clean air monitoring, water harvesting, and climate justice advocacy',
-        climateEvent: 'Air Quality & Water Governance',
-        location: 'New Delhi, India',
-        impact: 'Padma Shri Awardee',
+        id: 'indian_case_2',
+        personName: 'Indore Zero-Waste & Bio-CNG Model',
+        story: '100% door-to-door waste segregation fueling Asia\'s largest Gobar-Dhan Bio-CNG plant for city public transit.',
+        climateEvent: 'Circular Economy & Waste Management',
+        location: 'Indore, Madhya Pradesh, India',
+        impact: '550 TPD Bio-CNG',
         date: DateTime.now().subtract(const Duration(days: 2)),
-        sourceUrl: 'https://www.cseindia.org/page/sunita-narain',
-        imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80',
+        sourceUrl: 'https://indoremunicipalcorporation.org/',
+        imageUrl: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=600&q=80',
         severity: 'high',
-        source: 'Centre for Science and Environment',
+        source: 'Indore Municipal Corporation',
         isReviewed: true,
-        description: 'Director General of CSE and editor of Down To Earth magazine, championing grassroots decentralised rainwater harvesting and public transit emission policy.',
+        description: 'Voted India\'s cleanest city 6 years in a row. Segregates municipal waste into 6 streams at source, converting 550 tonnes of wet waste daily into Bio-CNG for 400+ city buses.',
       ),
       Case(
-        id: 'case_3',
-        personName: 'Prof. Navroz K. Dubash',
-        story: 'India decarbonisation pathways, power sector reforms, and climate policy architecture',
-        climateEvent: 'Climate Policy & Energy Transition',
-        location: 'New Delhi, India',
-        impact: 'IPCC Coordinating Lead Author',
+        id: 'indian_case_3',
+        personName: 'Sikkim 100% Organic State Policy',
+        story: 'World\'s first 100% organic state eliminating synthetic fertilizers across 75,000 hectares of Himalayan land.',
+        climateEvent: 'Sustainable Agriculture & Soil Health',
+        location: 'Gangtok, Sikkim, India',
+        impact: '100% Organic State',
         date: DateTime.now().subtract(const Duration(days: 3)),
-        sourceUrl: 'https://sustainablefutures.org/',
-        imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
-        severity: 'medium',
-        source: 'Sustainable Futures Collaborative',
-        isReviewed: true,
-        description: 'Senior Fellow at Sustainable Futures Collaborative and former CPR Professor, focusing on institutional frameworks for climate governance and green energy transitions.',
-      ),
-      Case(
-        id: 'case_4',
-        personName: 'Dr. Chirag Dhara',
-        story: 'Compound extreme weather analysis, wet-bulb heat thresholds, and regional climate modeling',
-        climateEvent: 'Heatwaves & Atmospheric Thermodynamics',
-        location: 'Sri City, Andhra Pradesh, India',
-        impact: 'MoES Assessment Author',
-        date: DateTime.now().subtract(const Duration(days: 4)),
-        sourceUrl: 'https://krea.edu.in/faculty/chirag-dhara/',
-        imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80',
+        sourceUrl: 'https://sikkim.gov.in/',
+        imageUrl: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=600&q=80',
         severity: 'high',
-        source: 'Krea University',
+        source: 'Government of Sikkim',
         isReviewed: true,
-        description: 'Climate physicist at Krea University and key author of India\'s first national climate assessment published by the Ministry of Earth Sciences (MoES).',
+        description: 'Awarded the UN Future Policy Award. Completely phased out chemical pesticides and synthetic fertilizers, boosting soil organic carbon and protecting fragile Himalayan eco-zones.',
       ),
       Case(
-        id: 'case_5',
-        personName: 'Dr. Jagdish Krishnaswamy',
-        story: 'Western Ghats watershed ecohydrology, river basin dynamics, and tropical forest resilience',
-        climateEvent: 'Ecohydrology & Forest Catchments',
-        location: 'Bengaluru, Karnataka, India',
-        impact: 'IPCC Lead Author',
+        id: 'indian_case_4',
+        personName: 'Delhi Electric Vehicle (EV) Policy',
+        story: 'Rapid urban transport electrification target of 25% new vehicle registrations by 2024 with 8,000+ e-buses.',
+        climateEvent: 'E-Mobility & Urban Air Quality',
+        location: 'New Delhi, Delhi NCR, India',
+        impact: '8,000+ E-Buses',
+        date: DateTime.now().subtract(const Duration(days: 4)),
+        sourceUrl: 'https://ev.delhi.gov.in/',
+        imageUrl: 'https://images.unsplash.com/photo-1558441719-aa34bf57312c?auto=format&fit=crop&w=600&q=80',
+        severity: 'high',
+        source: 'Delhi Transport Department',
+        isReviewed: true,
+        description: 'Pioneered comprehensive urban EV incentives, charging hub networks, and bus fleet electrification to reduce transport emissions in Delhi NCR.',
+      ),
+      Case(
+        id: 'indian_case_5',
+        personName: 'Gujarat Canal-Top Solar Power Project',
+        story: 'Innovative solar panels mounted atop Narmada irrigation canals generating clean power while stopping evaporation.',
+        climateEvent: 'Solar Power & Water Conservation',
+        location: 'Charanka & Narmada Canals, Gujarat, India',
+        impact: 'Zero Land Footprint',
         date: DateTime.now().subtract(const Duration(days: 5)),
-        sourceUrl: 'https://iihs.co.in/',
-        imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80',
+        sourceUrl: 'https://geda.gujarat.gov.in/',
+        imageUrl: 'https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?auto=format&fit=crop&w=600&q=80',
         severity: 'medium',
-        source: 'IIHS Bangalore',
+        source: 'Gujarat Energy Development Agency',
         isReviewed: true,
-        description: 'Dean of the School of Environment and Sustainability at IIHS Bangalore, analyzing hydrological changes in Western Ghats catchments and tropical riparian zones.',
+        description: 'Eliminates land acquisition requirements by utilizing canal top space, conserving millions of liters of irrigation water from evaporation annually.',
       ),
       Case(
-        id: 'case_6',
-        personName: 'Dr. Priyadarsanan Dharma Rajan',
-        story: 'Ecosystem services, pollinator decline, and biodiversity conservation in fragile agricultural belts',
-        climateEvent: 'Biodiversity & Agro-Ecosystems',
-        location: 'Bengaluru, Karnataka, India',
-        impact: 'ATREE Senior Fellow',
+        id: 'indian_case_6',
+        personName: 'Sundarbans Coastal Mangrove Restoration',
+        story: 'Community-led planting of 15 million+ native mangroves to create bio-shields against Bay of Bengal cyclones.',
+        climateEvent: 'Coastal Protection & Carbon Sinks',
+        location: 'Sundarbans Biosphere, West Bengal, India',
+        impact: '15M+ Mangroves Planted',
         date: DateTime.now().subtract(const Duration(days: 6)),
-        sourceUrl: 'https://www.atree.org/',
-        imageUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=600&q=80',
-        severity: 'medium',
-        source: 'ATREE India',
+        sourceUrl: 'https://westbengalforest.gov.in/',
+        imageUrl: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=600&q=80',
+        severity: 'high',
+        source: 'West Bengal Forest Department',
         isReviewed: true,
-        description: 'Senior Fellow at ATREE, investigating pollinator declines, insect conservation, and canopy arthropods under changing regional microclimates.',
+        description: 'Restores mangrove forest cover across vulnerable estuarine islands, shielding 4.5 million coastal residents while sequestering blue carbon.',
       ),
     ];
   }
@@ -258,14 +249,14 @@ class CaseService {
       if (apiKey.isEmpty) return [];
 
       final effectiveKeywords = [
-        'climate refugee', 'disaster victim', 'flood victim'
+        'India climate', 'India flood', 'India heatwave', 'India solar', 'India renewable'
       ];
 
-      final keywords = effectiveKeywords.join(' ');
+      final keywords = effectiveKeywords.join(' OR ');
       final url = 'https://gnews.io/api/v4/search?'
           'q=$keywords&'
           'lang=en&'
-          'country=us&'
+          'country=in&'
           'max=10&'
           'apikey=$apiKey';
 

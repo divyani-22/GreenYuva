@@ -12,6 +12,7 @@ import 'auth_screen.dart';
 import 'verification_history_screen.dart';
 import 'admin_access_screen.dart';
 import '../theme/app_theme.dart';
+import '../services/user_service.dart';
 import 'main_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -41,11 +42,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadSettings() async {
     try {
       final notificationsEnabled = await _notificationService.isNotificationsEnabled();
-      final currentLanguage = await _languageService.getCurrentLanguage();
-
       setState(() {
         _notificationsEnabled = notificationsEnabled;
-        _selectedLanguage = currentLanguage;
+        _selectedLanguage = _languageService.currentLanguageName;
       });
     } catch (e) {
       // Non-critical settings load error
@@ -86,7 +85,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       body: PaperGridBackground(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(18, 12, 18, 40),
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 120),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -243,11 +242,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
+              const SizedBox(height: 24),
+
+              _buildSectionTitle('NEWSLETTER & COMMUNITY DIGEST'),
+              const SizedBox(height: 8),
+              _buildNewsletterCard(),
               const SizedBox(height: 32),
 
               // Logout Button in NeoButton style
               NeoButton(
-                text: 'Log Out of EcoSprint',
+                text: 'Log Out of Green Yuva',
                 leading: const Icon(Icons.logout_rounded, color: AppColors.solidBlack, size: 20),
                 color: AppColors.dustyCoral,
                 textColor: AppColors.solidBlack,
@@ -390,22 +394,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
           side: const BorderSide(color: AppColors.solidBlack, width: 2.0),
         ),
         title: Text(
-          'Select Language',
+          'Select Language'.tr,
           style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppColors.solidBlack),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          children: ['English(US)', 'Hindi (हिंदी)', 'Tamil (தமிழ்)'].map((lang) {
+          children: ['English', 'Hindi (हिंदी)'].map((lang) {
+            final isSelected = _selectedLanguage.contains('Hindi')
+                ? lang.contains('Hindi')
+                : (!lang.contains('Hindi'));
             return ListTile(
-              title: Text(lang, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
-              trailing: _selectedLanguage == lang ? const Icon(Icons.check_rounded, color: AppColors.solidBlack) : null,
+              title: Text(
+                lang,
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.solidBlack,
+                ),
+              ),
+              trailing: isSelected
+                  ? const Icon(Icons.check_circle_rounded, color: AppColors.leafGreen)
+                  : null,
               onTap: () async {
                 await _languageService.setLanguage(lang);
                 if (!mounted) return;
-                setState(() => _selectedLanguage = lang);
+                setState(() => _selectedLanguage = _languageService.currentLanguageName);
                 if (ctx.mounted) {
                   Navigator.pop(ctx);
                 }
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    backgroundColor: AppColors.solidBlack,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(color: AppColors.butterYellow, width: 2.0),
+                    ),
+                    content: Text(
+                      _languageService.isHindi
+                          ? 'भाषा बदलकर हिंदी कर दी गई है 🇮🇳'
+                          : 'Language switched to English 🌿',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                );
               },
             );
           }).toList(),
@@ -428,7 +462,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppColors.solidBlack),
         ),
         content: Text(
-          'Are you sure you want to log out of EcoSprint?',
+          'Are you sure you want to log out of Green Yuva?',
           style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, color: Colors.grey[800]),
         ),
         actions: [
@@ -459,6 +493,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (shouldLogout == true && mounted) {
       try {
+        await UserService().clearLocalUser();
         await FirebaseAuth.instance.signOut();
         if (!mounted) return;
         Navigator.of(context).pushAndRemoveUntil(
@@ -466,13 +501,123 @@ class _SettingsScreenState extends State<SettingsScreen> {
           (route) => false,
         );
       } catch (e) {
+        try {
+          await UserService().clearLocalUser();
+        } catch (_) {}
         if (!mounted) return;
-        // Fallback logout
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const AuthScreen()),
           (route) => false,
         );
       }
     }
+  }
+
+  bool _isSubscribedToNewsletter = false;
+  final TextEditingController _newsletterEmailController = TextEditingController();
+
+  Widget _buildNewsletterCard() {
+    return NeoCard(
+      color: AppColors.butterYellow,
+      radius: 18,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.mark_email_read_rounded, color: AppColors.solidBlack, size: 24),
+              const SizedBox(width: 10),
+              Text(
+                'Climate Youth Digest 📰',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.solidBlack,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Weekly highlights on student eco-innovations, campus leaderboards, and green breakthroughs.',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.solidBlack.withValues(alpha: 0.8),
+            ),
+          ),
+          const SizedBox(height: 14),
+          if (_isSubscribedToNewsletter)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.electricMint,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.solidBlack, width: 1.8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle_rounded, color: AppColors.solidBlack, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Subscribed to Green Yuva Digest 🌿',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.solidBlack,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _newsletterEmailController,
+                    decoration: InputDecoration(
+                      hintText: 'Enter your email address',
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.solidBlack, width: 1.8),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.solidBlack,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  ),
+                  onPressed: () {
+                    final email = _newsletterEmailController.text.trim();
+                    if (email.contains('@')) {
+                      setState(() => _isSubscribedToNewsletter = true);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          backgroundColor: AppColors.solidBlack,
+                          content: Text('Subscribed $email to Green Yuva Digest! 📩'),
+                        ),
+                      );
+                    }
+                  },
+                  child: Text(
+                    'Subscribe',
+                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w900),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
   }
 }

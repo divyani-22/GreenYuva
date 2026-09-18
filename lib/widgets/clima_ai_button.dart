@@ -39,7 +39,7 @@ class ClimaAIButton extends StatelessWidget {
         ),
         child: Center(
           child: SvgPicture.asset(
-            'icons/ai.svg',
+            'assets/icons/ai.svg',
             width: 20,
             height: 20,
             fit: BoxFit.contain,

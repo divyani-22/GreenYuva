@@ -67,7 +67,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  "Welcome to EcoSprint!",
+                  "Welcome to Green Yuva!",
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
@@ -125,7 +125,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                     FadeTransition(
                       opacity: _fadeAnimation,
                       child: Text(
-                        'Welcome to EcoSprint',
+                        'Welcome to Green Yuva',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 24,
                           fontWeight: FontWeight.w900,
@@ -137,7 +137,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                     FadeTransition(
                       opacity: _fadeAnimation,
                       child: Text(
-                        'Quick challenges and real-world actions',
+                        'Youth Climate Action & Real-World Impact',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 13,
@@ -167,122 +167,31 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
   }
 }
 
-/// Flat vector illustration matching the plant & gardener in the reference image
+/// Official Green Yuva Logo Emblem badge matching the Neo-Brutalist design
 class EcoPlantIllustration extends StatelessWidget {
   const EcoPlantIllustration({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 140,
-      height: 120,
+      width: 108,
+      height: 108,
       decoration: BoxDecoration(
-        color: AppColors.paperCream,
+        color: AppColors.electricMint,
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.solidBlack, width: 2.0),
+        border: Border.all(color: AppColors.solidBlack, width: 2.5),
         boxShadow: const [
           BoxShadow(
             color: AppColors.solidBlack,
-            offset: Offset(3.0, 3.5),
+            offset: Offset(3.5, 4.0),
             blurRadius: 0,
           ),
         ],
       ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Terracotta Pot
-          Positioned(
-            bottom: 16,
-            child: Container(
-              width: 50,
-              height: 38,
-              decoration: BoxDecoration(
-                color: AppColors.dustyCoral,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(10)),
-                border: Border.all(color: AppColors.solidBlack, width: 2.0),
-              ),
-            ),
-          ),
-          // Plant Stem & Leaves
-          Positioned(
-            bottom: 48,
-            child: Container(
-              width: 4,
-              height: 35,
-              color: AppColors.solidBlack,
-            ),
-          ),
-          // Leaves (Sage green)
-          Positioned(
-            bottom: 58,
-            left: 52,
-            child: Transform.rotate(
-              angle: -0.5,
-              child: Container(
-                width: 22,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: AppColors.sageGreen,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.solidBlack, width: 1.5),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 66,
-            right: 50,
-            child: Transform.rotate(
-              angle: 0.5,
-              child: Container(
-                width: 24,
-                height: 13,
-                decoration: BoxDecoration(
-                  color: AppColors.sageGreen,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.solidBlack, width: 1.5),
-                ),
-              ),
-            ),
-          ),
-          // Pink / Coral Blossoms matching reference
-          Positioned(
-            top: 18,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildBlossomDot(),
-                const SizedBox(width: 4),
-                _buildBlossomDot(size: 14, color: AppColors.dustyCoral),
-                const SizedBox(width: 4),
-                _buildBlossomDot(),
-              ],
-            ),
-          ),
-          Positioned(
-            top: 32,
-            left: 42,
-            child: _buildBlossomDot(size: 9, color: AppColors.butterYellow),
-          ),
-          Positioned(
-            top: 36,
-            right: 44,
-            child: _buildBlossomDot(size: 10, color: AppColors.dustyCoral),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBlossomDot({double size = 11, Color color = AppColors.dustyCoral}) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        border: Border.all(color: AppColors.solidBlack, width: 1.5),
+      padding: const EdgeInsets.all(10),
+      child: Image.asset(
+        'assets/images/logo.png',
+        fit: BoxFit.contain,
       ),
     );
   }

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:climacore/main.dart';
+import 'package:greenyuva/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    await tester.pumpWidget(ClimaCore());
+  testWidgets('Green Yuva smoke test', (WidgetTester tester) async {
+    await tester.pumpWidget(const GreenYuvaApp());
 
     expect(find.text('0'), findsOneWidget);
     expect(find.text('1'), findsNothing);

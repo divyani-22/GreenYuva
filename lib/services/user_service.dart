@@ -26,7 +26,7 @@ class UserService {
     }
   }
 
-  Future<AppUser> getLocalUser() async {
+  Future<AppUser?> getLocalUser({bool createIfNull = true}) async {
     if (_currentLocalUser != null) return _currentLocalUser!;
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -52,6 +52,8 @@ class UserService {
       print('⚠️ Error reading local user: $e');
     }
 
+    if (!createIfNull) return null;
+
     _currentLocalUser = AppUser(
       id: 'local_default',
       firstName: 'Climate',
@@ -66,6 +68,25 @@ class UserService {
       weekGoal: 800,
     );
     return _currentLocalUser!;
+  }
+
+  Future<void> clearLocalUser() async {
+    _currentLocalUser = null;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('local_user_id');
+      await prefs.remove('local_user_firstName');
+      await prefs.remove('local_user_lastName');
+      await prefs.remove('local_user_schoolId');
+      await prefs.remove('local_user_points');
+      await prefs.remove('local_user_actions');
+      await prefs.remove('local_user_streak');
+      await prefs.remove('local_user_weekPoints');
+      await prefs.remove('local_user_weekGoal');
+      print('✅ UserService: Cleared local user session');
+    } catch (e) {
+      print('⚠️ Error clearing local user: $e');
+    }
   }
 
   Future<AppUser?> getUserById(String id) async {
@@ -98,39 +119,61 @@ class UserService {
   Future<void> addUserPoints(String userId, int pointsToAdd) async {
     if (pointsToAdd == 0) return;
 
-    final doc = await usersCollection.doc(userId).get();
-    if (doc.exists) {
-      final userData = doc.data() as Map<String, dynamic>;
-      final currentPoints = userData['points'] ?? 0;
-      final newPoints = currentPoints + pointsToAdd;
+    final isDeduction = pointsToAdd < 0;
 
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      final dayKey = 'points_${now.year}_${now.month.toString().padLeft(2, '0')}_${now.day.toString().padLeft(2, '0')}';
+    // Immediately persist to local user state so points are never lost offline
+    try {
+      final local = await getLocalUser();
+      if (local != null) {
+        final updatedLocal = local.copyWith(
+          points: (local.points + pointsToAdd).clamp(0, 9999999),
+          // Do not penalize weekly action target when spending Karma Coins on perks
+          weekPoints: isDeduction ? local.weekPoints : (local.weekPoints + pointsToAdd),
+        );
+        await saveCurrentLocalUser(updatedLocal);
+        print('✅ UserService: Updated local points to ${updatedLocal.points} (${pointsToAdd >= 0 ? "+$pointsToAdd" : "$pointsToAdd"})');
+      }
+    } catch (e) {
+      print('⚠️ UserService local points update error: $e');
+    }
 
-      final currentDayPoints = userData[dayKey] ?? 0;
-      final newDayPoints = currentDayPoints + pointsToAdd;
+    // Also attempt to update Firestore if online
+    try {
+      final doc = await usersCollection.doc(userId).get();
+      if (doc.exists) {
+        final userData = doc.data() as Map<String, dynamic>;
+        final currentPoints = (userData['points'] as num?)?.toInt() ?? 0;
+        final newPoints = (currentPoints + pointsToAdd).clamp(0, 9999999);
 
-      final updates = <String, dynamic>{
-        'points': newPoints,
-        dayKey: newDayPoints,
-      };
+        final updates = <String, dynamic>{
+          'points': newPoints,
+        };
 
-      final monthKey = 'points_${now.year}_${now.month.toString().padLeft(2, '0')}';
-      final currentMonthPoints = userData[monthKey] ?? 0;
-      final newMonthPoints = currentMonthPoints + pointsToAdd;
-      updates[monthKey] = newMonthPoints;
+        if (!isDeduction) {
+          final now = DateTime.now();
+          final dayKey = 'points_${now.year}_${now.month.toString().padLeft(2, '0')}_${now.day.toString().padLeft(2, '0')}';
+          final currentDayPoints = (userData[dayKey] as num?)?.toInt() ?? 0;
+          updates[dayKey] = currentDayPoints + pointsToAdd;
 
-      await usersCollection.doc(userId).update(updates);
+          final monthKey = 'points_${now.year}_${now.month.toString().padLeft(2, '0')}';
+          final currentMonthPoints = (userData[monthKey] as num?)?.toInt() ?? 0;
+          updates[monthKey] = currentMonthPoints + pointsToAdd;
 
-      final newWeekPoints = await _calculateWeeklyPoints(userId, now);
+          await usersCollection.doc(userId).update(updates);
 
-      await usersCollection.doc(userId).update({
-        'weekPoints': newWeekPoints,
-      });
+          final newWeekPoints = await _calculateWeeklyPoints(userId, now);
+          await usersCollection.doc(userId).update({
+            'weekPoints': newWeekPoints,
+          });
+        } else {
+          // Deducting points for rewards: only update wallet points
+          await usersCollection.doc(userId).update(updates);
+        }
 
-      print('✅ UserService: Added $pointsToAdd points to user $userId');
-      print('   📊 Daily: $newDayPoints | Weekly: $newWeekPoints | Monthly: $newMonthPoints | Total: $newPoints');
+        print('✅ UserService: Synced $pointsToAdd points to Firestore user $userId');
+      }
+    } catch (e) {
+      print('ℹ️ Firestore addUserPoints skipped or offline: $e');
     }
   }
 
@@ -345,11 +388,21 @@ class UserService {
   }
 
   Future<void> addUserAction(String userId) async {
-    final doc = await usersCollection.doc(userId).get();
-    if (doc.exists) {
-      final currentActions = (doc.data() as Map<String, dynamic>)['actions'] ?? 0;
-      await usersCollection.doc(userId).update({'actions': currentActions + 1});
-    }
+    try {
+      final local = await getLocalUser();
+      if (local != null) {
+        final updatedLocal = local.copyWith(actions: local.actions + 1);
+        await saveCurrentLocalUser(updatedLocal);
+      }
+    } catch (_) {}
+
+    try {
+      final doc = await usersCollection.doc(userId).get();
+      if (doc.exists) {
+        final currentActions = (doc.data() as Map<String, dynamic>)['actions'] ?? 0;
+        await usersCollection.doc(userId).update({'actions': currentActions + 1});
+      }
+    } catch (_) {}
   }
 
   Future<void> updateUserStreak(String userId, int streak) async {

@@ -50,10 +50,12 @@ class DefaultFirebaseOptions {
   );
 
   static FirebaseOptions get android => FirebaseOptions(
-    apiKey: EnvConfig.firebaseAndroidApiKey,
-    appId: '1:425034978224:android:f93592eb8fd62d30523c75',
-    messagingSenderId: '425034978224',
-    projectId: 'e-icon-83a50',
-    storageBucket: 'e-icon-83a50.firebasestorage.app',
+    apiKey: EnvConfig.firebaseAndroidApiKey.isNotEmpty
+        ? EnvConfig.firebaseAndroidApiKey
+        : 'AIzaSyDaoegSJWhd7lp9QTQ_UOCKSZ3IymiEGGA',
+    appId: '1:347954266489:android:8972545d95b87dd779afa8',
+    messagingSenderId: '347954266489',
+    projectId: 'greenyuva-e56f6',
+    storageBucket: 'greenyuva-e56f6.firebasestorage.app',
   );
 }

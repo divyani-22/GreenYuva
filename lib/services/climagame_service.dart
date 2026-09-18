@@ -133,7 +133,8 @@ class ClimaGameService {
           .collection('ecores')
           .where('isActive', isEqualTo: true)
           .where('isDiscovered', isEqualTo: true)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 3));
 
       final ecores = <Ecore>[];
       for (final doc in snapshot.docs) {
@@ -235,7 +236,8 @@ class ClimaGameService {
       print('🎯 Completing mission $missionId in ecore $ecoreId');
       // Update local and remote points
       try {
-        await _userService.updateUserPoints(userId, 50);
+        await _userService.addUserPoints(userId, 50);
+        await _userService.addUserAction(userId);
       } catch (_) {}
       return true;
     } catch (e) {

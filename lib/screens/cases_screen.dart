@@ -127,7 +127,7 @@ class _CasesScreenState extends State<CasesScreen> {
       color: AppColors.solidBlack,
       backgroundColor: AppColors.cardWhite,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           // Banner introducing Indian Environmental Researchers
@@ -155,7 +155,7 @@ class _CasesScreenState extends State<CasesScreen> {
                     shape: BoxShape.circle,
                     border: Border.all(color: AppColors.solidBlack, width: 1.5),
                   ),
-                  child: const Icon(Icons.school_rounded, color: AppColors.solidBlack, size: 24),
+                  child: const Icon(Icons.travel_explore_rounded, color: AppColors.solidBlack, size: 24),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -163,7 +163,7 @@ class _CasesScreenState extends State<CasesScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Indian Climate Researchers',
+                        '🇮🇳 Indian Climate Action Case Studies',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
@@ -172,7 +172,7 @@ class _CasesScreenState extends State<CasesScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Pioneering science, IPCC leadership & local adaptation',
+                        'Benchmark sustainability initiatives: Solar, Bio-CNG, Organic Policy & Mangroves',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w600,

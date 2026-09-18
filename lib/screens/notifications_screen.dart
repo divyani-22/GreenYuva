@@ -38,7 +38,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   final List<NotificationItem> _notifications = [
     NotificationItem(
       id: '1',
-      title: 'Welcome to EcoSprint! 🌿',
+      title: 'Welcome to Green Yuva! 🌿',
       message: 'Explore campus action hubs, swap study gear, and earn Karma Coins!',
       time: 'Just now',
       icon: Icons.eco_rounded,

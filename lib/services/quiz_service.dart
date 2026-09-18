@@ -11,6 +11,26 @@ class QuizService {
   static final UserService _userService = UserService();
 
   static List<Quiz>? _cachedQuizzes;
+  static final Map<String, List<QuizAttempt>> _localAttempts = {};
+
+  static void _saveLocalAttempt(QuizAttempt attempt) {
+    final key = '${attempt.userId}_${attempt.quizId}';
+    final list = _localAttempts[key] ?? [];
+    final existingIdx = list.indexWhere((a) => a.id == attempt.id);
+    if (existingIdx != -1) {
+      list[existingIdx] = attempt;
+    } else {
+      list.add(attempt);
+    }
+    _localAttempts[key] = list;
+  }
+
+  static List<QuizAttempt> _getLocalAttempts(String userId, String quizId) {
+    final key = '${userId}_${quizId}';
+    final list = _localAttempts[key] ?? [];
+    list.sort((a, b) => b.startedAt.compareTo(a.startedAt));
+    return List.from(list);
+  }
 
   static void clearQuizCache() {
     _cachedQuizzes = null;
@@ -20,7 +40,7 @@ class QuizService {
   static Future<List<Quiz>> getQuizzes() async {
     try {
       print('📚 Fetching quizzes from Firebase...');
-      final snapshot = await _firestore.collection('quizzes').get();
+      final snapshot = await _firestore.collection('quizzes').get().timeout(const Duration(seconds: 3));
       print('📊 Found ${snapshot.docs.length} quiz documents');
 
       if (snapshot.docs.isEmpty) {
@@ -67,16 +87,30 @@ class QuizService {
             questions.add(question);
           }
 
+          // If no questions were directly in document, hydrate from JSON fallback
+          if (questions.isEmpty) {
+            try {
+              final jsonQuizzes = await _loadQuizzesFromJSON();
+              final matched = jsonQuizzes.firstWhere(
+                (jq) => jq.id == doc.id || jq.title.toLowerCase().trim() == (data['title'] ?? '').toString().toLowerCase().trim(),
+                orElse: () => jsonQuizzes.isNotEmpty ? jsonQuizzes[quizzes.length % jsonQuizzes.length] : jsonQuizzes.first,
+              );
+              if (matched.questions.isNotEmpty) {
+                questions.addAll(matched.questions);
+              }
+            } catch (_) {}
+          }
+
           final quiz = Quiz(
             id: doc.id,
             title: data['title'] ?? doc.id,
             description: data['description'] ?? '',
-            author: data['author'] ?? 'e-icon World Contest',
+            author: data['author'] ?? 'Green Yuva Climate Academy',
             category: data['category'] ?? 'Climate Science',
-            questionCount: questions.length,
-            timeLimit: data['timeLimit'] ?? 300,
-            points: data['points'] ?? 30,
-            rating: (data['rating'] ?? 4.5).toDouble(),
+            questionCount: questions.isNotEmpty ? questions.length : 10,
+            timeLimit: data['timeLimit'] ?? 900,
+            points: data['points'] ?? 100,
+            rating: (data['rating'] ?? 4.8).toDouble(),
             imageUrl: data['imageUrl'] ?? '',
             videoUrl: data['videoUrl'] ?? '',
             questions: questions,
@@ -99,6 +133,10 @@ class QuizService {
       print('❌ Error fetching quizzes: $e');
       return await _loadQuizzesFromJSON();
     }
+  }
+
+  static Future<List<Quiz>> loadQuizzesFromJSON() async {
+    return _loadQuizzesFromJSON();
   }
 
   static Future<List<Quiz>> _loadQuizzesFromJSON() async {
@@ -229,16 +267,30 @@ class QuizService {
           print('  Number of answers: ${question.answers.length}');
         }
 
+        // Hydrate questions from JSON fallback if empty
+        if (questions.isEmpty) {
+          try {
+            final jsonQuizzes = await _loadQuizzesFromJSON();
+            final matched = jsonQuizzes.firstWhere(
+              (jq) => jq.id == quizId || jq.title.toLowerCase().trim() == (data['title'] ?? '').toString().toLowerCase().trim(),
+              orElse: () => jsonQuizzes.isNotEmpty ? jsonQuizzes.first : jsonQuizzes.first,
+            );
+            if (matched.questions.isNotEmpty) {
+              questions.addAll(matched.questions);
+            }
+          } catch (_) {}
+        }
+
         return Quiz(
           id: doc.id,
           title: data['title'] ?? doc.id,
           description: data['description'] ?? '',
-          author: data['author'] ?? 'e-icon World Contest',
+          author: data['author'] ?? 'Green Yuva Climate Academy',
           category: data['category'] ?? 'Climate Science',
-          questionCount: questions.length,
-          timeLimit: data['timeLimit'] ?? 300,
-          points: data['points'] ?? 30,
-          rating: (data['rating'] ?? 4.5).toDouble(),
+          questionCount: questions.isNotEmpty ? questions.length : 10,
+          timeLimit: data['timeLimit'] ?? 900,
+          points: data['points'] ?? 100,
+          rating: (data['rating'] ?? 4.8).toDouble(),
           imageUrl: data['imageUrl'] ?? '',
           videoUrl: data['videoUrl'] ?? '',
           questions: questions,
@@ -248,9 +300,14 @@ class QuizService {
           isActive: data['isActive'] ?? true,
         );
       }
-      return null;
     } catch (e) {
-      print('Error fetching quiz: $e');
+      print('ℹ️ Firestore getQuizById fallback to local list: $e');
+    }
+
+    try {
+      final quizzes = await getQuizzes();
+      return quizzes.firstWhere((q) => q.id == quizId);
+    } catch (_) {
       return null;
     }
   }
@@ -440,36 +497,26 @@ class QuizService {
   }
 
   static Future<List<QuizAttempt>> getUserQuizAttempts(String userId, String quizId) async {
+    final localAttempts = _getLocalAttempts(userId, quizId);
     try {
       final snapshot = await _firestore
           .collection('users')
           .doc(userId)
           .collection('quiz_attempts')
           .where('quizId', isEqualTo: quizId)
-          .orderBy('startedAt', descending: true)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 3));
 
-      return snapshot.docs.map((doc) => QuizAttempt.fromJson(doc.data())).toList();
-    } catch (e) {
-      print('❌ Error fetching user quiz attempts: $e');
-      print('⚠️ This might be due to missing Firestore index. Trying without orderBy...');
-
-      try {
-        final snapshot = await _firestore
-            .collection('users')
-            .doc(userId)
-            .collection('quiz_attempts')
-            .where('quizId', isEqualTo: quizId)
-            .get();
-
-        final attempts = snapshot.docs.map((doc) => QuizAttempt.fromJson(doc.data())).toList();
-
-        attempts.sort((a, b) => b.startedAt.compareTo(a.startedAt));
-        return attempts;
-      } catch (e2) {
-        print('❌ Error in fallback query: $e2');
-        return [];
+      for (final doc in snapshot.docs) {
+        try {
+          final attempt = QuizAttempt.fromJson(doc.data());
+          _saveLocalAttempt(attempt);
+        } catch (_) {}
       }
+      return _getLocalAttempts(userId, quizId);
+    } catch (e) {
+      print('ℹ️ Firestore getUserQuizAttempts fallback to local: $e');
+      return localAttempts;
     }
   }
 
@@ -500,69 +547,55 @@ class QuizService {
   }
 
   static Future<QuizAttempt> createQuizAttempt(String userId, String quizId, int totalQuestions) async {
+    final existingAttempts = await getUserQuizAttempts(userId, quizId);
+    final attemptNumber = existingAttempts.length + 1;
+
+    print('🔍 Creating Quiz Attempt Debug:');
+    print('  User ID: $userId');
+    print('  Quiz ID: $quizId');
+    print('  Total Questions: $totalQuestions');
+    print('  Attempt Number: $attemptNumber');
+
+    final attempt = QuizAttempt(
+      id: _uuid.v4(),
+      quizId: quizId,
+      userId: userId,
+      attemptNumber: attemptNumber,
+      startedAt: DateTime.now(),
+      finalScore: 0,
+      timeSpent: 0,
+      isCompleted: false,
+      totalQuestions: totalQuestions,
+      correctAnswers: 0,
+      questionResults: [],
+    );
+
+    // Save locally first so user is never blocked
+    _saveLocalAttempt(attempt);
+
     try {
-
-      final existingAttempts = await getUserQuizAttempts(userId, quizId);
-      final attemptNumber = existingAttempts.length + 1;
-
-      print('🔍 Creating Quiz Attempt Debug:');
-      print('  User ID: $userId');
-      print('  Quiz ID: $quizId');
-      print('  Total Questions: $totalQuestions');
-      print('  Attempt Number: $attemptNumber');
-
-      final attempt = QuizAttempt(
-        id: _uuid.v4(),
-        quizId: quizId,
-        userId: userId,
-        attemptNumber: attemptNumber,
-        startedAt: DateTime.now(),
-        finalScore: 0,
-        timeSpent: 0,
-        isCompleted: false,
-        totalQuestions: totalQuestions,
-        correctAnswers: 0,
-        questionResults: [],
-      );
-
       await _firestore
           .collection('users')
           .doc(userId)
           .collection('quiz_attempts')
           .doc(attempt.id)
-          .set(attempt.toJson());
+          .set(attempt.toJson())
+          .timeout(const Duration(seconds: 3));
 
-      print('✅ Created quiz attempt: ${attempt.id}');
-      print('  Attempt Total Questions: ${attempt.totalQuestions}');
-      print('  Attempt Correct Answers: ${attempt.correctAnswers}');
-      return attempt;
+      print('✅ Created quiz attempt in Firestore: ${attempt.id}');
     } catch (e) {
-      print('❌ Error creating quiz attempt: $e');
-      rethrow;
+      print('ℹ️ Firestore create quiz attempt offline/skipped: $e');
     }
+
+    return attempt;
   }
 
   static Future<void> submitAnswerToAttempt(QuizAttempt attempt, String questionId, String answerId, bool isCorrect, int questionTimeSpent) async {
     try {
-
       final quiz = await getQuizById(attempt.quizId);
-      if (quiz != null && attempt.totalQuestions != quiz.questions.length) {
-        print('⚠️ Quiz Service: Attempt has wrong total questions (${attempt.totalQuestions} vs ${quiz.questions.length})');
-
-        attempt = QuizAttempt(
-          id: attempt.id,
-          quizId: attempt.quizId,
-          userId: attempt.userId,
-          attemptNumber: attempt.attemptNumber,
-          startedAt: attempt.startedAt,
-          completedAt: attempt.completedAt,
-          finalScore: attempt.finalScore,
-          timeSpent: attempt.timeSpent,
-          isCompleted: false,
-          totalQuestions: quiz.questions.length,
-          correctAnswers: attempt.correctAnswers,
-          questionResults: attempt.questionResults,
-        );
+      int totalQuestions = attempt.totalQuestions;
+      if (quiz != null && totalQuestions != quiz.questions.length) {
+        totalQuestions = quiz.questions.length;
       }
 
       final questionResult = QuestionResult(
@@ -575,20 +608,11 @@ class QuizService {
 
       final updatedQuestionResults = [...attempt.questionResults, questionResult];
       final newCorrectAnswers = attempt.correctAnswers + (isCorrect ? 1 : 0);
-      final isCompleted = updatedQuestionResults.length >= attempt.totalQuestions;
-      final finalScore = attempt.totalQuestions > 0
-          ? (newCorrectAnswers / attempt.totalQuestions * 100).round()
+      final isCompleted = updatedQuestionResults.length >= totalQuestions;
+      final finalScore = totalQuestions > 0
+          ? (newCorrectAnswers / totalQuestions * 100).round()
           : 0;
       final totalTimeSpent = attempt.timeSpent + questionTimeSpent;
-
-      print('📊 Quiz Service Debug Info:');
-      print('  Previous Correct Answers: ${attempt.correctAnswers}');
-      print('  Is Answer Correct: $isCorrect');
-      print('  New Correct Answers: $newCorrectAnswers');
-      print('  Total Questions: ${attempt.totalQuestions}');
-      print('  Questions Answered: ${updatedQuestionResults.length}');
-      print('  Final Score: $finalScore%');
-      print('  Is Completed: $isCompleted');
 
       final updatedAttempt = QuizAttempt(
         id: attempt.id,
@@ -600,26 +624,33 @@ class QuizService {
         finalScore: finalScore,
         timeSpent: totalTimeSpent,
         isCompleted: isCompleted,
-        totalQuestions: attempt.totalQuestions,
+        totalQuestions: totalQuestions,
         correctAnswers: newCorrectAnswers,
         questionResults: updatedQuestionResults,
       );
 
-      await _firestore
-          .collection('users')
-          .doc(attempt.userId)
-          .collection('quiz_attempts')
-          .doc(attempt.id)
-          .set(updatedAttempt.toJson());
+      // Save locally first
+      _saveLocalAttempt(updatedAttempt);
 
-      print('✅ Updated quiz attempt: ${attempt.id}');
+      // Attempt Firestore sync
+      try {
+        await _firestore
+            .collection('users')
+            .doc(attempt.userId)
+            .collection('quiz_attempts')
+            .doc(attempt.id)
+            .set(updatedAttempt.toJson())
+            .timeout(const Duration(seconds: 3));
+        print('✅ Synced quiz attempt to Firestore: ${attempt.id}');
+      } catch (e) {
+        print('ℹ️ Firestore sync answer offline/skipped: $e');
+      }
 
       if (isCompleted) {
         await _awardQuizPointsForAttempt(updatedAttempt);
       }
     } catch (e) {
-      print('❌ Error submitting answer: $e');
-      rethrow;
+      print('❌ Error in submitAnswerToAttempt: $e');
     }
   }
 
@@ -629,25 +660,19 @@ class QuizService {
       if (quiz == null) return;
 
       final newPoints = (attempt.finalScore / 100 * quiz.points).round();
-
       final previousBestAttempt = await getUserBestAttempt(attempt.userId, attempt.quizId);
 
       int pointsToAward = 0;
 
       if (previousBestAttempt == null || previousBestAttempt.id == attempt.id) {
-
         pointsToAward = newPoints;
         print('🎯 First attempt or new best - awarding $pointsToAward points');
       } else {
-
         final previousBestPoints = (previousBestAttempt.finalScore / 100 * quiz.points).round();
-
         if (newPoints > previousBestPoints) {
-
           pointsToAward = newPoints - previousBestPoints;
           print('📈 Improved performance! Previous best: $previousBestPoints, New: $newPoints, Awarding difference: $pointsToAward');
         } else {
-
           pointsToAward = 0;
           print('🚫 No improvement over previous best ($previousBestPoints points). No additional points awarded.');
         }
@@ -656,13 +681,13 @@ class QuizService {
       if (pointsToAward > 0) {
         final userService = UserService();
         await userService.addUserPoints(attempt.userId, pointsToAward);
+        await userService.addUserAction(attempt.userId);
         print('✅ Awarded $pointsToAward points for quiz ${attempt.quizId} (${attempt.finalScore}% score)');
 
         await _trackMaxQuizPoints(attempt.userId, attempt.quizId, newPoints);
       } else {
         print('ℹ️ No points awarded - user already achieved better or equal performance');
       }
-
     } catch (e) {
       print('❌ Error awarding quiz points: $e');
     }
@@ -679,29 +704,37 @@ class QuizService {
         'quizId': quizId,
         'maxPointsEarned': maxPoints,
         'lastUpdated': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      }, SetOptions(merge: true)).timeout(const Duration(seconds: 3));
 
       print('📊 Tracked max points for user $userId on quiz $quizId: $maxPoints points');
     } catch (e) {
-      print('❌ Error tracking max quiz points: $e');
+      print('ℹ️ Offline/skipped tracking max quiz points: $e');
     }
   }
 
   static Future<int> getMaxPointsEarned(String userId, String quizId) async {
     try {
+      final best = await getUserBestAttempt(userId, quizId);
+      if (best != null) {
+        final quiz = await getQuizById(quizId);
+        if (quiz != null) {
+          return (best.finalScore / 100 * quiz.points).round();
+        }
+      }
+
       final doc = await _firestore
           .collection('users')
           .doc(userId)
           .collection('quiz_max_points')
           .doc(quizId)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 3));
 
       if (doc.exists) {
         return doc.data()?['maxPointsEarned'] ?? 0;
       }
       return 0;
     } catch (e) {
-      print('❌ Error fetching max points earned: $e');
       return 0;
     }
   }
@@ -711,10 +744,14 @@ class QuizService {
       final quiz = await getQuizById(quizId);
       if (quiz == null) return false;
 
+      final best = await getUserBestAttempt(userId, quizId);
+      if (best != null && best.isCompleted && best.finalScore >= 100) {
+        return true;
+      }
+
       final maxPointsEarned = await getMaxPointsEarned(userId, quizId);
       return maxPointsEarned >= quiz.points;
     } catch (e) {
-      print('❌ Error checking perfect completion: $e');
       return false;
     }
   }

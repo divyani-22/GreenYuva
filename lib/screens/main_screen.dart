@@ -13,6 +13,7 @@ import 'create_swap_item_screen.dart';
 import 'ai_chat_screen.dart';
 import '../theme/app_theme.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/language_service.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -73,6 +74,7 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   void onItemTapped(int index) {
     if (_selectedIndex != index) {
       _animationController.reverse().then((_) {
+        if (!mounted) return;
         setState(() {
           _selectedIndex = index;
         });
@@ -110,8 +112,8 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    'EcoSprint',
-                    style: GoogleFonts.questrial(
+                    'Green Yuva',
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
                       color: AppColors.forestGreen,
@@ -187,32 +189,41 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     }
   }
 
-  /// Neo-Brutalist Bottom Navigation Bar (white pill, 2px solid black border, 0-blur hard shadow, and central coral FAB)
+  /// Neo-Brutalist Bottom Navigation Bar (white pill, 2px solid black border, 0-blur hard shadow, horizontal sliding support)
   Widget _buildFloatingGlassNavBar() {
     return SafeArea(
       child: Center(
         heightFactor: 1.0,
         child: Container(
           constraints: const BoxConstraints(maxWidth: 680),
-          margin: const EdgeInsets.fromLTRB(12, 0, 12, 14),
+          margin: const EdgeInsets.fromLTRB(10, 0, 10, 12),
           child: NeoCard(
             radius: 26,
             color: AppColors.pureWhite,
             borderWidth: 2.0,
             shadowOffset: const Offset(0, 4),
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(0, 'assets/icons/home_active.svg', 'assets/icons/home_inactive.svg', 'Home'),
-                _buildNavItem(1, 'assets/icons/climaconnect_active.svg', 'assets/icons/climaconnect_inactive.svg', 'YuvaVibe'),
-                _buildIconNavItem(5, Icons.recycling_rounded, 'YuvaSwap'),
-                _buildCenterActionFab(),
-                _buildLeaderboardCenterItem(2),
-                _buildNavItem(3, 'assets/icons/climagame_active.svg', 'assets/icons/climagame_inactive.svg', 'GreenRush'),
-                _buildNavItem(4, 'assets/icons/climasights_active.svg', 'assets/icons/climasights_inactive.svg', 'YuvaSense'),
-                _buildIconNavItem(6, Icons.smart_toy_outlined, 'YuvaSathi'),
-              ],
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildNavItem(0, 'assets/icons/home_active.svg', 'assets/icons/home_inactive.svg', 'Home'.tr),
+                  const SizedBox(width: 4),
+                  _buildNavItem(1, 'assets/icons/climaconnect_active.svg', 'assets/icons/climaconnect_inactive.svg', 'YuvaVibe'.tr),
+                  const SizedBox(width: 4),
+                  _buildIconNavItem(5, Icons.recycling_rounded, 'YuvaSwap'.tr),
+                  const SizedBox(width: 6),
+                  _buildCenterActionFab(),
+                  const SizedBox(width: 6),
+                  _buildNavItem(3, 'assets/icons/climagame_active.svg', 'assets/icons/climagame_inactive.svg', 'GreenRush'.tr),
+                  const SizedBox(width: 4),
+                  _buildNavItem(4, 'assets/icons/climasights_active.svg', 'assets/icons/climasights_inactive.svg', 'YuvaSense'.tr),
+                  const SizedBox(width: 4),
+                  _buildIconNavItem(6, Icons.smart_toy_outlined, 'YuvaSathi'.tr),
+                ],
+              ),
             ),
           ),
         ),

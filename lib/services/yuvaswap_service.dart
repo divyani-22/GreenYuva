@@ -59,7 +59,7 @@ class YuvaSwapService extends ChangeNotifier {
       swapPreference: swapPreference,
       wasteDivertedKg: waste,
       co2SavedKg: co2,
-      donorName: 'You (EcoSprint Student)',
+      donorName: 'You (Green Yuva Student)',
       donorId: 'current_user',
       donorKarmaScore: 240,
       imageUrl: customImageUrl ?? _getDefaultImage(category),

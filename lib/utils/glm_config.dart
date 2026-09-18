@@ -35,16 +35,16 @@ class GLMConfig {
   }
 
   static const String systemPrompt = """
-You are ClimaAI (YuvaSathi), an expert environmental science tutor and campus sustainability guide for Indian university and school students within the EcoSprint platform.
+You are ClimaAI (YuvaSathi), an expert environmental science tutor and campus sustainability guide for Indian university and school students within the Green Yuva platform.
 
-EcoSprint Modules:
+Green Yuva Modules:
 1. YuvaVibe: Campus community forum and eco-activity groups for 8 premier Indian institutes (PCCOE Pune, IIT Bombay, COEP Tech, BITS Pilani, VIT Vellore, NIT Trichy, Manipal MIT, DTU Delhi).
 2. YuvaSwap: Circular campus marketplace where students trade pre-owned textbooks, drafting kits, lab equipment, and bicycles, calculating carbon and water saved.
 3. GreenRush: GPS geo-located action hubs and campus climate missions where students plant trees, conduct rooftop energy audits, verify with photos/GPS, and earn GreenKarma Coins.
 4. YuvaSense: Interactive climate intelligence hub featuring 10-question topic quizzes, real-time Indian disaster tracking (IMD, CPCB, NDMA alerts), and Indian climate scientist case studies (Dr. Roxy Mathew Koll, Dr. Sunita Narain, Prof. Navroz Dubash, Dr. Chirag Dhara).
 5. GreenKarma: Reward currency (Karma Coins) earned through climate actions, redeemable for eco-friendly campus perks.
 
-Always provide accurate, educational, and actionable answers. Use Indian environmental context, government initiatives (National Solar Mission, LiFE Mission, CPCB standards), and EcoSprint module guidance.
+Always provide accurate, educational, and actionable answers. Use Indian environmental context, government initiatives (National Solar Mission, LiFE Mission, CPCB standards), and Green Yuva module guidance.
 """;
 
   static Map<String, dynamic>? getEndpoint(String name) {
@@ -60,10 +60,10 @@ Always provide accurate, educational, and actionable answers. Use Indian environ
 
     // Greetings
     if (lower == 'hi' || lower == 'hello' || lower.contains('namaste') || lower.contains('who are you') || lower.contains('introduce')) {
-      return """Namaste! I am ClimaAI (YuvaSathi), your dedicated environmental tutor and campus climate action guide on EcoSprint.
+      return """Namaste! I am ClimaAI (YuvaSathi), your dedicated environmental tutor and campus climate action guide on Green Yuva.
 
 I can help you with:
-- Understanding EcoSprint modules (YuvaVibe, YuvaSwap, GreenRush, YuvaSense, and GreenKarma)
+- Understanding Green Yuva modules (YuvaVibe, YuvaSwap, GreenRush, YuvaSense, and GreenKarma)
 - Preparing for Topic Quizzes & understanding climate science
 - Learning about Indian climate challenges (AQI, monsoons, heatwaves, renewable energy)
 - Practical steps to earn Karma Coins and organize sustainability drives on your campus!
@@ -75,7 +75,7 @@ What would you like to explore today?""";
     if (lower.contains('karma') || lower.contains('coin') || lower.contains('reward') || lower.contains('point')) {
       return """🪙 GreenKarma & Karma Coins:
 
-Karma Coins are EcoSprint's campus sustainability currency awarded when you take tangible climate actions:
+Karma Coins are Green Yuva's campus sustainability currency awarded when you take tangible climate actions:
 
 1. How to Earn:
 - Complete GreenRush campus missions (+50 to +150 Karma Coins)

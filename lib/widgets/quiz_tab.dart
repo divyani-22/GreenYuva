@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/quiz.dart';
 import '../services/quiz_service.dart';
@@ -177,8 +177,16 @@ class _QuizTabState extends State<QuizTab> {
     );
   }
 
-  void _startQuiz(Quiz quiz) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => QuizDetailScreen(quiz: quiz)));
+  void _startQuiz(Quiz quiz) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => QuizDetailScreen(quiz: quiz, user: widget.user),
+      ),
+    );
+    if (mounted) {
+      _loadQuizzes();
+    }
   }
 
   void _deleteProgress(QuizProgress progress) {

@@ -222,7 +222,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             SvgPicture.asset(
-                              'icons/green_points.svg',
+                              'assets/icons/green_points.svg',
                               width: 16,
                               height: 16,
                             ),

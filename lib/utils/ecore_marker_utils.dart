@@ -3,9 +3,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class EcoreMarkerUtils {
   static const Map<String, String> _ecoreAssets = {
-    'before_conquering': 'icons/ecore_before_conquering.png',
-    'after_conquering': 'icons/ecore_after_conquering.png',
-    'cooldown': 'icons/ecore_after_conquering.png',
+    'before_conquering': 'assets/icons/ecore_before_conquering.png',
+    'after_conquering': 'assets/icons/ecore_after_conquering.png',
+    'cooldown': 'assets/icons/ecore_after_conquering.png',
   };
 
   static final Map<String, BitmapDescriptor> _iconCache = {};

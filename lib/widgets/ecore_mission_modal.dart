@@ -1,11 +1,8 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/ecore.dart';
 import '../models/user.dart';
-import '../services/climagame_service.dart';
-import '../screens/mission_detail_screen.dart';
-import '../utils/transitions.dart';
+import '../screens/mission_proof_screen.dart';
 import '../theme/app_theme.dart';
 
 class EcoreMissionModal extends StatefulWidget {
@@ -14,47 +11,30 @@ class EcoreMissionModal extends StatefulWidget {
   final VoidCallback onMissionCompleted;
 
   const EcoreMissionModal({
-    Key? key,
+    super.key,
     required this.ecore,
     required this.user,
     required this.onMissionCompleted,
-  }) : super(key: key);
+  });
 
   @override
   State<EcoreMissionModal> createState() => _EcoreMissionModalState();
 }
 
 class _EcoreMissionModalState extends State<EcoreMissionModal> {
-  bool _isLoading = false;
-  int _userDailyMissionCount = 1;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkUserMissionLimit();
-  }
-
-  Future<void> _checkUserMissionLimit() async {
-    try {
-      final dailyCount = await ClimaGameService.getUserDailyMissionCount(widget.user.id);
-      if (mounted) {
-        setState(() {
-          _userDailyMissionCount = dailyCount;
-        });
-      }
-    } catch (_) {}
-  }
-
-  Future<void> _quickComplete(EcoreMission mission) async {
-    setState(() => _isLoading = true);
-    await ClimaGameService.completeMission(
-      userId: widget.user.id,
-      userName: widget.user.fullName,
-      ecoreId: widget.ecore.id,
-      missionId: mission.id,
+  Future<void> _openCameraVerification(EcoreMission mission) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MissionProofScreen(
+          ecore: widget.ecore,
+          mission: mission,
+          user: widget.user,
+        ),
+      ),
     );
-    if (mounted) {
-      setState(() => _isLoading = false);
+
+    if (result == true && mounted) {
       widget.onMissionCompleted();
       Navigator.pop(context);
     }
@@ -208,6 +188,7 @@ class _EcoreMissionModalState extends State<EcoreMissionModal> {
         borderWidth: 2.0,
         shadowOffset: const Offset(2.5, 3),
         padding: const EdgeInsets.all(12),
+        onTap: () => _openCameraVerification(mission),
         child: Row(
           children: [
             Container(
@@ -246,11 +227,11 @@ class _EcoreMissionModalState extends State<EcoreMissionModal> {
               ),
             ),
             GestureDetector(
-              onTap: _isLoading ? null : () => _quickComplete(mission),
+              onTap: () => _openCameraVerification(mission),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: AppColors.butterYellow,
+                  color: AppColors.mintGreen,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.solidBlack, width: 1.8),
                   boxShadow: const [
@@ -261,13 +242,20 @@ class _EcoreMissionModalState extends State<EcoreMissionModal> {
                     ),
                   ],
                 ),
-                child: Text(
-                  'Complete',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.solidBlack,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.camera_alt_rounded, size: 14, color: AppColors.solidBlack),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Verify 📸',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.solidBlack,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

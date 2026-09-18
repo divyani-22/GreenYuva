@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/quiz.dart';
+import '../models/user.dart';
 import '../services/quiz_service.dart';
 import '../services/user_service.dart';
 import '../theme/app_theme.dart';
@@ -10,11 +11,13 @@ import '../theme/app_theme.dart';
 class QuizDetailScreen extends StatefulWidget {
   final Quiz quiz;
   final QuizAttempt? attempt;
+  final AppUser? user;
 
   const QuizDetailScreen({
     Key? key,
     required this.quiz,
     this.attempt,
+    this.user,
   }) : super(key: key);
 
   @override
@@ -25,26 +28,70 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
   bool _isLoading = false;
   String? _userId;
   bool _isPerfectlyCompleted = false;
+  late Quiz _currentQuiz;
 
   @override
   void initState() {
     super.initState();
+    _currentQuiz = widget.quiz;
+    _hydrateQuizIfNeeded();
     _getCurrentUser();
-    _checkPerfectCompletion();
+  }
+
+  Future<void> _hydrateQuizIfNeeded() async {
+    if (_currentQuiz.questions.isEmpty) {
+      try {
+        final hydrated = await QuizService.getQuizById(_currentQuiz.id);
+        if (hydrated != null && hydrated.questions.isNotEmpty) {
+          if (mounted) setState(() { _currentQuiz = hydrated; });
+          return;
+        }
+        final jsonList = await QuizService.loadQuizzesFromJSON();
+        final match = jsonList.firstWhere(
+          (q) => q.id == _currentQuiz.id || q.title.toLowerCase().trim() == _currentQuiz.title.toLowerCase().trim(),
+          orElse: () => jsonList.isNotEmpty ? jsonList.first : _currentQuiz,
+        );
+        if (match.questions.isNotEmpty && mounted) {
+          setState(() { _currentQuiz = match; });
+        }
+      } catch (e) {
+        print('Error hydrating quiz: $e');
+      }
+    }
   }
 
   Future<void> _getCurrentUser() async {
+    if (widget.user != null) {
+      if (mounted) {
+        setState(() {
+          _userId = widget.user!.id;
+        });
+      }
+      _checkPerfectCompletion();
+      return;
+    }
+
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      setState(() {
-        _userId = user.uid;
-      });
+      if (mounted) {
+        setState(() {
+          _userId = user.uid;
+        });
+      }
+    } else {
+      final local = await UserService().getLocalUser();
+      if (mounted) {
+        setState(() {
+          _userId = local?.id;
+        });
+      }
     }
+    _checkPerfectCompletion();
   }
 
   Future<void> _checkPerfectCompletion() async {
     if (_userId != null) {
-      final isPerfect = await QuizService.hasUserCompletedQuizPerfectly(_userId!, widget.quiz.id);
+      final isPerfect = await QuizService.hasUserCompletedQuizPerfectly(_userId!, _currentQuiz.id);
       if (mounted) {
         setState(() {
           _isPerfectlyCompleted = isPerfect;
@@ -55,13 +102,10 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
 
   Future<void> _startQuiz() async {
     if (_userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please log in to start the quiz'),
-          backgroundColor: AppColors.dustyCoral,
-        ),
-      );
-      return;
+      await _getCurrentUser();
+    }
+    if (_userId == null) {
+      _userId = 'local_user_${DateTime.now().millisecondsSinceEpoch}';
     }
 
     setState(() {
@@ -69,19 +113,32 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     });
 
     try {
+      // Ensure questions are populated
+      if (_currentQuiz.questions.isEmpty) {
+        final jsonList = await QuizService.loadQuizzesFromJSON();
+        final match = jsonList.firstWhere(
+          (q) => q.id == _currentQuiz.id || q.title.toLowerCase().trim() == _currentQuiz.title.toLowerCase().trim(),
+          orElse: () => jsonList.isNotEmpty ? jsonList.first : _currentQuiz,
+        );
+        if (match.questions.isNotEmpty) {
+          _currentQuiz = match;
+        }
+      }
+
+      final totalQuestions = _currentQuiz.questions.isNotEmpty ? _currentQuiz.questions.length : 10;
       QuizAttempt attempt;
 
       if (widget.attempt != null) {
         attempt = widget.attempt!;
       } else {
-        final latestAttempt = await QuizService.getUserLatestAttempt(_userId!, widget.quiz.id);
-        if (latestAttempt != null && !latestAttempt.isCompleted && latestAttempt.totalQuestions == widget.quiz.questions.length) {
+        final latestAttempt = await QuizService.getUserLatestAttempt(_userId!, _currentQuiz.id);
+        if (latestAttempt != null && !latestAttempt.isCompleted && latestAttempt.totalQuestions == totalQuestions) {
           attempt = latestAttempt;
         } else {
           attempt = await QuizService.createQuizAttempt(
             _userId!,
-            widget.quiz.id,
-            widget.quiz.questions.length,
+            _currentQuiz.id,
+            totalQuestions,
           );
         }
       }
@@ -91,13 +148,14 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => QuizTakingScreen(
-              quiz: widget.quiz,
+              quiz: _currentQuiz,
               attempt: attempt,
             ),
           ),
         );
       }
     } catch (e) {
+      print('Failed to start quiz error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -243,7 +301,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                         const Icon(Icons.help_outline_rounded, size: 22, color: AppColors.solidBlack),
                         const SizedBox(height: 4),
                         Text(
-                          '${widget.quiz.questions.length} Questions',
+                          '${_currentQuiz.questions.isNotEmpty ? _currentQuiz.questions.length : 10} Questions',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12,
                             fontWeight: FontWeight.w800,
@@ -592,6 +650,14 @@ class _QuizTakingScreenState extends State<QuizTakingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.quiz.questions.isEmpty || _currentQuestionIndex >= widget.quiz.questions.length) {
+      return const Scaffold(
+        backgroundColor: AppColors.paperCream,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.solidBlack, strokeWidth: 2.5),
+        ),
+      );
+    }
     final currentQuestion = widget.quiz.questions[_currentQuestionIndex];
     final isLowTime = _remainingSeconds < 120; // Less than 2 minutes left
 
@@ -881,28 +947,37 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
     if (_pointsAwarded) return;
 
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        final userService = UserService();
-        final score = widget.attempt.finalScore;
-        int pointsToAward = 0;
-
-        if (score >= 90) {
-          pointsToAward = widget.quiz.points;
-        } else if (score >= 70) {
-          pointsToAward = (widget.quiz.points * 0.8).round();
-        } else if (score >= 50) {
-          pointsToAward = (widget.quiz.points * 0.5).round();
+      String targetUserId = widget.attempt.userId;
+      if (targetUserId.isEmpty) {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          targetUserId = user.uid;
+        } else {
+          final local = await UserService().getLocalUser();
+          if (local == null) return; // No user available — skip awarding points
+          targetUserId = local.id;
         }
+      }
 
-        if (pointsToAward > 0) {
-          await userService.addUserPoints(user.uid, pointsToAward);
-          await userService.addUserAction(user.uid);
-          if (mounted) {
-            setState(() {
-              _pointsAwarded = true;
-            });
-          }
+      final userService = UserService();
+      final score = widget.attempt.finalScore;
+      int pointsToAward = 0;
+
+      if (score >= 90) {
+        pointsToAward = widget.quiz.points;
+      } else if (score >= 70) {
+        pointsToAward = (widget.quiz.points * 0.8).round();
+      } else if (score >= 50) {
+        pointsToAward = (widget.quiz.points * 0.5).round();
+      }
+
+      if (pointsToAward > 0) {
+        await userService.addUserPoints(targetUserId, pointsToAward);
+        await userService.addUserAction(targetUserId);
+        if (mounted) {
+          setState(() {
+            _pointsAwarded = true;
+          });
         }
       }
     } catch (e) {

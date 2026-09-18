@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "425034978224",
-    "project_id": "e-icon-83a50",
-    "storage_bucket": "e-icon-83a50.firebasestorage.app"
+    "project_number": "347954266489",
+    "project_id": "greenyuva-e56f6",
+    "storage_bucket": "greenyuva-e56f6.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:425034978224:android:f93592eb8fd62d30523c75",
+        "mobilesdk_app_id": "1:347954266489:android:8972545d95b87dd779afa8",
         "android_client_info": {
-          "package_name": "com.example.climacore"
+          "package_name": "com.greenyuva.app"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "YOUR_FIREBASE_ANDROID_API_KEY"
+          "current_key": "AIzaSyDaoegSJWhd7lp9QTQ_UOCKSZ3IymiEGGA"
         }
       ],
       "services": {

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../constants.dart';
 import '../services/user_service.dart';
+import '../theme/app_theme.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -55,39 +57,47 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   }
 
   _checkCurrentUser() async {
-    await Future.delayed(Duration(seconds: 3));
+    await Future.delayed(const Duration(seconds: 2));
 
     if (!mounted) return;
 
     try {
-      FirebaseAuth.instance.authStateChanges().listen((User? user) async {
-        if (!mounted) return;
+      final user = await FirebaseAuth.instance
+          .authStateChanges()
+          .first
+          .timeout(const Duration(seconds: 2), onTimeout: () => null);
 
-        if (user == null) {
-          if (mounted) {
-            Navigator.pushReplacementNamed(context, '/auth');
-          }
-        } else {
-          try {
-            await UserService().ensureDummyUsersExist();
-          } catch (e) {
-            print('⚠️ Warning: Could not create dummy users: $e');
-          }
+      if (!mounted) return;
 
-          if (mounted) {
-            Navigator.pushReplacementNamed(context, '/home');
-          }
+      if (user != null) {
+        try {
+          await UserService().ensureDummyUsersExist().timeout(const Duration(seconds: 2), onTimeout: () {});
+        } catch (e) {
+          print('⚠️ Warning: Could not create dummy users: $e');
         }
-      }, onError: (e) {
-        print('⚠️ Auth error: $e');
+
         if (mounted) {
+          Navigator.pushReplacementNamed(context, '/home');
+        }
+      } else {
+        // Check if a real saved local user session exists
+        final localUser = await UserService().getLocalUser(createIfNull: false);
+        if (!mounted) return;
+        if (localUser != null) {
+          Navigator.pushReplacementNamed(context, '/home');
+        } else {
           Navigator.pushReplacementNamed(context, '/auth');
         }
-      });
+      }
     } catch (e) {
-      print('⚠️ FirebaseAuth unavailable: $e');
+      print('⚠️ FirebaseAuth unavailable or timed out: $e');
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/auth');
+        final localUser = await UserService().getLocalUser(createIfNull: false);
+        if (localUser != null) {
+          Navigator.pushReplacementNamed(context, '/home');
+        } else {
+          Navigator.pushReplacementNamed(context, '/auth');
+        }
       }
     }
   }
@@ -102,28 +112,72 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.paperCream,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ScaleTransition(
               scale: _logoScale,
-              child: Image.asset(AppConstants.appLogoPath, height: 150),
-            ),
-            SizedBox(height: 20),
-            FadeTransition(
-              opacity: _textFade,
-              child: Text(
-                AppConstants.appName,
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.electricMint,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.solidBlack, width: 3.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.solidBlack,
+                      offset: const Offset(5, 5),
+                      blurRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Image.asset(
+                  AppConstants.appLogoPath,
+                  height: 110,
+                  errorBuilder: (_, __, ___) => Icon(Icons.eco_rounded, size: 80, color: AppColors.solidBlack),
+                ),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 28),
+            FadeTransition(
+              opacity: _textFade,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.butterYellow,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.solidBlack, width: 2.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.solidBlack,
+                      offset: const Offset(3, 3),
+                      blurRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Text(
+                  'Green Yuva',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.solidBlack,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
             FadeTransition(
               opacity: _textFade,
               child: Text(
                 AppConstants.appTagline,
-                style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13.5,
+                  color: AppColors.solidBlack.withValues(alpha: 0.75),
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
