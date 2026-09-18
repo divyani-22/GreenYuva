@@ -40,13 +40,14 @@ class DefaultFirebaseOptions {
   }
 
   static FirebaseOptions get web => FirebaseOptions(
-    apiKey: EnvConfig.firebaseWebApiKey,
-    appId: '1:425034978224:web:5cc306e19528f4af523c75',
-    messagingSenderId: '425034978224',
-    projectId: 'e-icon-83a50',
-    authDomain: 'e-icon-83a50.firebaseapp.com',
-    storageBucket: 'e-icon-83a50.firebasestorage.app',
-    measurementId: 'G-MP9FS7YMH6',
+    apiKey: EnvConfig.firebaseWebApiKey.isNotEmpty && !EnvConfig.firebaseWebApiKey.contains('your_')
+        ? EnvConfig.firebaseWebApiKey
+        : 'AIzaSyDaoegSJWhd7lp9QTQ_UOCKSZ3IymiEGGA',
+    appId: '1:347954266489:web:8972545d95b87dd779afa8',
+    messagingSenderId: '347954266489',
+    projectId: 'greenyuva-e56f6',
+    authDomain: 'greenyuva-e56f6.firebaseapp.com',
+    storageBucket: 'greenyuva-e56f6.firebasestorage.app',
   );
 
   static FirebaseOptions get android => FirebaseOptions(

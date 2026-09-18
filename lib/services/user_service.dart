@@ -91,8 +91,8 @@ class UserService {
 
   Future<AppUser?> getUserById(String id) async {
     try {
-      final doc = await usersCollection.doc(id).get();
-      if (doc.exists) {
+      final doc = await usersCollection.doc(id).get().timeout(const Duration(seconds: 2));
+      if (doc.exists && doc.data() != null) {
         final user = AppUser.fromMap(doc.id, doc.data() as Map<String, dynamic>);
         _currentLocalUser = user;
         return user;

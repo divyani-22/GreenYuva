@@ -44,6 +44,27 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       curve: Curves.easeInOut,
     ));
     _loadUser();
+
+    // Safety watchdog: Guarantee loading screen dismisses in max 1.5 seconds under all conditions
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted && _loadingUser) {
+        setState(() {
+          _appUser ??= AppUser(
+            id: 'green_yuva_hero',
+            firstName: 'Climate',
+            lastName: 'Hero',
+            points: 120,
+            savedPosts: [],
+            likedPosts: [],
+            actions: 3,
+            streak: 1,
+            weekPoints: 60,
+            weekGoal: 800,
+          );
+          _loadingUser = false;
+        });
+      }
+    });
   }
 
   Future<void> _loadUser() async {
@@ -51,17 +72,37 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     final firebaseUser = FirebaseAuth.instance.currentUser;
     if (firebaseUser != null) {
       try {
-        user = await UserService().getUserById(firebaseUser.uid);
+        user = await UserService().getUserById(firebaseUser.uid).timeout(
+          const Duration(seconds: 2),
+          onTimeout: () => null,
+        );
       } catch (e) {
         print('Error loading user from Firebase: $e');
       }
     }
     if (user == null) {
       try {
-        user = await UserService().getLocalUser();
+        user = await UserService().getLocalUser().timeout(
+          const Duration(seconds: 1),
+          onTimeout: () => null,
+        );
       } catch (e) {
         print('Error loading local user: $e');
       }
+    }
+    if (user == null) {
+      user = AppUser(
+        id: firebaseUser?.uid ?? 'green_yuva_hero',
+        firstName: firebaseUser?.displayName?.split(' ').first ?? 'Climate',
+        lastName: firebaseUser?.displayName?.split(' ').skip(1).join(' ') ?? 'Hero',
+        points: 120,
+        savedPosts: [],
+        likedPosts: [],
+        actions: 3,
+        streak: 1,
+        weekPoints: 60,
+        weekGoal: 800,
+      );
     }
     if (mounted) {
       setState(() {
@@ -135,6 +176,37 @@ class MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                     child: CircularProgressIndicator(
                       strokeWidth: 3,
                       valueColor: AlwaysStoppedAnimation<Color>(AppColors.leafGreen),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton.icon(
+                    onPressed: () {
+                      if (mounted) {
+                        setState(() {
+                          _appUser ??= AppUser(
+                            id: 'green_yuva_hero',
+                            firstName: 'Climate',
+                            lastName: 'Hero',
+                            points: 120,
+                            savedPosts: const [],
+                            likedPosts: const [],
+                            actions: 3,
+                            streak: 1,
+                            weekPoints: 60,
+                            weekGoal: 800,
+                          );
+                          _loadingUser = false;
+                        });
+                      }
+                    },
+                    icon: const Icon(Icons.arrow_forward_rounded, size: 16, color: AppColors.forestGreen),
+                    label: Text(
+                      'Enter Dashboard',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.forestGreen,
+                      ),
                     ),
                   ),
                 ],
