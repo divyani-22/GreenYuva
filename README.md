@@ -88,74 +88,37 @@ While youth desire to participate in ecological stewardship, traditional climate
 
 ```mermaid
 flowchart TD
-    %% CLIENT LAYER
-    subgraph ClientPresentation["📱 CLIENT PRESENTATION & UI LAYER (Flutter 3.x / Dart)"]
-        direction TB
-        UIFramework["Neo-Brutalist UI Framework<br/>• Bold 3px High-Contrast Borders<br/>• Flat Saturated Color Blocking<br/>• Tactile Depth & Micro-Interactions"]
-        RadarEngine["GreenRush Tactical Radar Engine<br/>• CustomPainter Dynamic Canvas<br/>• Compass Bearing & Gyro Orientation<br/>• Smooth Polar Grid & Target Blips"]
-        CampusHubsUI["Interactive Campus Modules<br/>• YuvaSwap Circular Marketplace<br/>• YuvaSense Real-Time Sensor Hub<br/>• YuvaVibe College Community Feeds"]
-        KarmaCanteenUI["Karma Canteen & Rewards Portal<br/>• Dynamic Vector QR Code Voucher Engine<br/>• Daily Streak Counter & Milestone Badges"]
+    classDef default font-size:14px;
+    classDef clientStyle fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,font-size:15px,color:#000;
+    classDef cloudStyle fill:#FFF3E0,stroke:#E65100,stroke-width:2px,font-size:15px,color:#000;
+    classDef aiStyle fill:#EDE7F6,stroke:#512DA8,stroke-width:2px,font-size:15px,color:#000;
+    classDef rewardStyle fill:#FCE4EC,stroke:#C2185B,stroke-width:2px,font-size:15px,color:#000;
+
+    subgraph Client["📱 1. Mobile & Web Client (Flutter 3.x)"]
+        UI["<b>Neo-Brutalist Client Interface</b><br/>• GreenRush GPS Radar (<50m Geo-Fence)<br/>• YuvaSwap Circular P2P Marketplace<br/>• YuvaSense Live CPCB Air Quality Monitor<br/>• Camera Proof Upload Engine"]:::clientStyle
     end
 
-    %% CLIENT LOGIC & STATE
-    subgraph ClientLogic["⚙️ CORE APPLICATION SERVICES & LOGIC LAYER"]
-        direction TB
-        StateMgr["Reactive State Orchestrator<br/>• StreamBuilders & ValueNotifiers<br/>• Optimistic UI Updates"]
-        LocSvc["LocationService<br/>• Geolocator GPS Subsystem<br/>• Haversine Distance & Geo-Fence Proximity (<50m)"]
-        AqiSvc["AqiService<br/>• CPCB & OpenAQ Telemetry Aggregator<br/>• India Standard AQI Calculator"]
-        SwapSvc["YuvaSwapService<br/>• P2P Item Catalog & Negotiation<br/>• CO₂ & Landfill Diversion Formulas"]
-        AiSvc["YuvaSathi AIService<br/>• Google Gemini 1.5 Pro Context Pipeline<br/>• Multi-turn Zero-Waste Campus Tutor"]
-        RewardSvc["RewardService<br/>• Karma Ledger & Anti-Tamper Balance<br/>• Canteen Voucher Validation"]
-        OfflineSync["OfflineCacheService<br/>• SharedPreferences & Memory FIFO Queue<br/>• Network Connectivity Auto-Retry Sync"]
+    subgraph Cloud["☁️ 2. Cloud Infrastructure (Firebase & Supabase)"]
+        Firebase["<b>Google Firebase</b><br/>• Student Authentication (Auth)<br/>• Realtime Cloud Firestore DB<br/>• Active Missions, Streaks & Leaderboards"]:::cloudStyle
+        Supabase["<b>Supabase Cloud S3</b><br/>• Proof Photos & User Avatars Storage<br/>• Resilient Secondary Database Fallback"]:::cloudStyle
     end
 
-    %% DUAL CLOUD INFRASTRUCTURE
-    subgraph CloudInfra["☁️ DUAL-ENGINE CLOUD INFRASTRUCTURE"]
-        direction TB
-        subgraph FirebaseStack["🔥 Google Firebase Cluster"]
-            FAuth["Firebase Auth<br/>• Email / Password Verification<br/>• Secure JWT & User Sessions"]
-            Firestore["Cloud Firestore (Real-Time NoSQL)<br/>• /users (Karma Balance & Streaks)<br/>• /missions (Active Campus Hubs)<br/>• /verifications (Proof Ledger)<br/>• /swap_items (Marketplace Catalog)<br/>• /notifications (Push Broadcasts)"]
-        end
-        subgraph SupabaseStack["⚡ Supabase Cloud Infrastructure"]
-            SupaStorage["Supabase S3 Object Storage<br/>• avatars/ (User Profiles)<br/>• proofs/ (Mission Verification Photos)<br/>• swap_images/ (Marketplace Items)"]
-            SupaDB["Supabase Postgres DB<br/>• Structured Relational Fallback<br/>• Storage Security & CDN Edge"]
-        end
+    subgraph Intelligence["🌐 3. External Intelligence & Sensors"]
+        Gemini["<b>Google Gemini 1.5 Pro AI</b><br/>• YuvaSathi Conversational Eco-Tutor"]:::aiStyle
+        CPCB["<b>CPCB India / OpenAQ Sensors</b><br/>• Live PM2.5, PM10 & Air Quality Telemetry"]:::aiStyle
     end
 
-    %% VERIFICATION & ADMIN PIPELINE
-    subgraph VerificationPipeline["🛡️ MISSION VERIFICATION & MODERATION PIPELINE"]
-        direction TB
-        SubmissionIngest["Proof Ingestion Engine<br/>• EXIF Metadata Stripping<br/>• Geo-Stamp & Timestamp Tagging"]
-        AdminModeration["Admin Moderation Console<br/>• Side-by-Side Photo & GPS Audit<br/>• One-Click Approve / Reject"]
-        TokenDispatcher["Karma Mint & Streak Dispatcher<br/>• Real-Time Firestore Transaction<br/>• Push Notification Trigger"]
+    subgraph Tokenomics["🪙 4. Campus Rewards & Payments"]
+        Rewards["<b>Karma Canteen & UPI Engine</b><br/>• Verified Karma Coin Ledger<br/>• In-App Canteen QR Vouchers<br/>• Student P2P Swaps (UPI Protocol)"]:::rewardStyle
     end
 
-    %% EXTERNAL INTELLIGENCE & TELEMETRY
-    subgraph ExternalFeeds["🌐 EXTERNAL INTELLIGENCE & TELEMETRY FEEDS"]
-        direction TB
-        GeminiAPI["Google Gemini 1.5 Pro API<br/>• High-Speed Multimodal Eco-Reasoning"]
-        CPCBSensors["CPCB India & OpenAQ Sensors<br/>• Live PM2.5, PM10, NO₂, SO₂ Feeds"]
-        IMDBulletin["IMD Disaster Warning Service<br/>• Western Disturbances & Extreme Weather Alerts"]
-        UPIEngine["Unified Payments Interface (UPI)<br/>• Direct UPI Deep-Link Protocol (upi://pay)"]
-    end
-
-    %% CONNECTIONS & FLOWS
-    ClientPresentation ==> ClientLogic
-    
-    LocSvc -->|"Proximity Stamp"| SubmissionIngest
-    ClientLogic -->|"Auth & Realtime Sync"| FirebaseStack
-    ClientLogic -->|"Media Ingestion (HTTP Multi-Part)"| SupaStorage
-    OfflineSync -.->|"Cache Fallback & Re-Sync"| ClientPresentation
-
-    SubmissionIngest --> AdminModeration
-    AdminModeration --> TokenDispatcher
-    TokenDispatcher -->|"Credit Coins & Streaks"| Firestore
-    TokenDispatcher -->|"Real-Time Push Alert"| ClientPresentation
-
-    AiSvc <-->|"REST / HTTPS TLS"| GeminiAPI
-    AqiSvc <-->|"Sensor Telemetry JSON"| CPCBSensors
-    AqiSvc <-->|"Weather Bulletins"| IMDBulletin
-    KarmaCanteenUI -->|"Deep Link UPI QR"| UPIEngine
+    %% Essential Data Flows
+    UI -->|"1. Auth & Realtime Sync"| Firebase
+    UI -->|"2. Upload Mission Photos"| Supabase
+    UI <-->|"3. Zero-Waste AI Queries"| Gemini
+    UI <-->|"4. Live Sensor Feeds"| CPCB
+    Firebase -->|"5. Credit Karma Coins"| Rewards
+    Rewards -->|"6. Dynamic Canteen QR"| UI
 ```
 
 ---
