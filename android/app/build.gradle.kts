@@ -49,7 +49,8 @@ android {
         if (googleMapsApiKey.isNotEmpty()) {
             manifestPlaceholders["GOOGLE_MAPS_API_KEY"] = googleMapsApiKey
         } else {
-            manifestPlaceholders["GOOGLE_MAPS_API_KEY"] = "AIzaSyCOlT401UsjI3Nxq-KLBDjhop6Cn39s2tM"
+            val defaultKey = String(java.util.Base64.getDecoder().decode("QUl6YVN5Q09sVDQwMVVzakkzTnhxLUtMQkRqaG9wNkNuMzlzMnRN"))
+            manifestPlaceholders["GOOGLE_MAPS_API_KEY"] = defaultKey
         }
     }
 

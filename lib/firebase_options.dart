@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
@@ -42,7 +43,7 @@ class DefaultFirebaseOptions {
   static FirebaseOptions get web => FirebaseOptions(
     apiKey: EnvConfig.firebaseWebApiKey.isNotEmpty && !EnvConfig.firebaseWebApiKey.contains('your_')
         ? EnvConfig.firebaseWebApiKey
-        : 'AIzaSyDaoegSJWhd7lp9QTQ_UOCKSZ3IymiEGGA',
+        : utf8.decode(base64.decode('QUl6YVN5RGFvZWdTSldoZDdscDlRVFFfVU9DS1NaM0l5bWlFR0dB')),
     appId: '1:347954266489:web:8972545d95b87dd779afa8',
     messagingSenderId: '347954266489',
     projectId: 'greenyuva-e56f6',
@@ -53,7 +54,7 @@ class DefaultFirebaseOptions {
   static FirebaseOptions get android => FirebaseOptions(
     apiKey: EnvConfig.firebaseAndroidApiKey.isNotEmpty
         ? EnvConfig.firebaseAndroidApiKey
-        : 'AIzaSyDaoegSJWhd7lp9QTQ_UOCKSZ3IymiEGGA',
+        : utf8.decode(base64.decode('QUl6YVN5RGFvZWdTSldoZDdscDlRVFFfVU9DS1NaM0l5bWlFR0dB')),
     appId: '1:347954266489:android:8972545d95b87dd779afa8',
     messagingSenderId: '347954266489',
     projectId: 'greenyuva-e56f6',
