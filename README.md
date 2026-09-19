@@ -26,16 +26,16 @@
 </p>
 
 > [!TIP]
-> ### 🌐 Interactive Live Demo Online!
-> **Green Yuva is live on the internet!** Experience the fully functional platform directly in your browser without installing anything:  
-> 👉 **[🚀 Launch Live Demo (greenyuva-e56f6.web.app)](https://greenyuva-e56f6.web.app)**  
-> 🔗 **[⚡ Alternative Live Demo Mirror](https://greenyuva-e56f6.firebaseapp.com)**  
+> ### 🌿 About Green Yuva & Live Demo
+> **Green Yuva** is an AI-powered, geofenced campus climate action platform & circular student economy. It empowers university students to engage in verified, real-world sustainability actions, trade academic essentials peer-to-peer on **YuvaSwap**, track live city air quality via **CPCB India telemetry**, chat with a cloud-based **Gemini 1.5 Pro climate tutor**, and earn tangible rewards at college cafeterias through the **Karma Points rewards system**.
+> 
+> 🚀 **[Launch Live Demo (greenyuva-e56f6.web.app)](https://greenyuva-e56f6.web.app)** &nbsp;|&nbsp; ⚡ **[Alternative Mirror (greenyuva-e56f6.firebaseapp.com)](https://greenyuva-e56f6.firebaseapp.com)**  
 > *(PWA enabled: open in Safari on iPhone or Chrome on Android and tap **"Add to Home Screen"** to run full-screen)*
 
 ---
 
 ## 📌 Table of Contents
-- [🌐 Live Demo Links](#-interactive-live-demo-online)
+- [🌿 About Green Yuva](#-about-green-yuva--live-demo)
 - [🌍 Vision & The Problem](#-vision--the-problem)
 - [✨ Core Innovation Pillars](#-core-innovation-pillars)
 - [🏛️ System Architecture](#️-system-architecture)
@@ -58,7 +58,7 @@ While youth desire to participate in ecological stewardship, traditional climate
 3. **Linear Campus Consumption**: Textbooks, drafters, calculators, and lab gear are discarded at the end of each academic semester instead of circulating within the campus economy.
 
 ### 💡 The Green Yuva Solution
-**Green Yuva** is a high-octane, gamified campus climate ecosystem engineered with a **Neo-Brutalist design language**. It bridges real-world physical eco-actions with digital verification, tokenized **Karma Coins**, live **Central Pollution Control Board (CPCB)** air monitoring, an **offline-first tactical campus radar (GreenRush)**, a circular student marketplace (**YuvaSwap**), and an on-device AI climate tutor (**YuvaSathi AI**).
+**Green Yuva** is a high-octane, gamified campus climate ecosystem engineered with a **Neo-Brutalist design language**. It bridges real-world physical eco-actions with digital verification, a verified **Karma Points rewards system**, live **Central Pollution Control Board (CPCB)** air monitoring, an **offline-first tactical campus radar (GreenRush)**, a circular student marketplace (**YuvaSwap**), and a cloud-powered AI climate tutor running Google Gemini 1.5 Pro (**YuvaSathi AI**).
 
 ```
    [ Real-World Student Eco Action ] 
@@ -67,7 +67,7 @@ While youth desire to participate in ecological stewardship, traditional climate
                  ↓
   [ Dual-Engine Cloud Verification (Firebase + Supabase) ]
                  ↓
-  [ Karma Coins & Campus Streak Accrual ] 
+  [ Karma Points & Campus Streak Accrual ] 
                  ↓
   [ Campus Canteen Perks & YuvaSwap Circular Commerce ]
 ```
@@ -96,8 +96,8 @@ While youth desire to participate in ecological stewardship, traditional climate
 * **Powered by Google Gemini 1.5 Pro**: Multimodal intelligence fine-tuned for college zero-waste living, recycling categorization, and carbon calculations.
 * **Context-Aware Suggestions**: Recommends personalized campus missions based on the student's branch, hostel location, and daily commute pattern.
 
-### 5. 🪙 Karma Canteen & Dual-Token Economy
-* **Tangible Utility for Climate Action**: Students redeem earned Karma Coins for campus canteen meals, library fine waivers, cafeteria beverages, and student giveaways.
+### 5. 🪙 Karma Canteen & Campus Rewards System
+* **Tangible Utility for Climate Action**: Students redeem earned Karma Points for campus canteen meals, eco-store merchandise, cafeteria beverages, and university sustainability perks.
 * **Daily Streak Multipliers**: Promotes sustained habit formation with milestone badges and university leaderboard rankings.
 
 ---
@@ -126,8 +126,8 @@ flowchart TD
         CPCB["<b>CPCB India / OpenAQ Sensors</b><br/>• Live PM2.5, PM10 & Air Quality Telemetry"]:::aiStyle
     end
 
-    subgraph Tokenomics["🪙 4. Campus Rewards & Payments"]
-        Rewards["<b>Karma Canteen & UPI Engine</b><br/>• Verified Karma Coin Ledger<br/>• In-App Canteen QR Vouchers<br/>• Student P2P Swaps (UPI Protocol)"]:::rewardStyle
+    subgraph RewardsSection["🪙 4. Campus Rewards & Incentives"]
+        Rewards["<b>Karma Canteen Rewards System</b><br/>• Verified Karma Points Ledger<br/>• In-App Canteen QR Vouchers<br/>• Student P2P Circular Swaps"]:::rewardStyle
     end
 
     %% Essential Data Flows
@@ -135,7 +135,7 @@ flowchart TD
     UI -->|"2. Upload Mission Photos"| Supabase
     UI <-->|"3. Zero-Waste AI Queries"| Gemini
     UI <-->|"4. Live Sensor Feeds"| CPCB
-    Firebase -->|"5. Credit Karma Coins"| Rewards
+    Firebase -->|"5. Credit Karma Points"| Rewards
     Rewards -->|"6. Dynamic Canteen QR"| UI
 ```
 
@@ -162,7 +162,7 @@ sequenceDiagram
     App->>Cloud: Upload Image to Supabase S3 & Log in Firestore
     Cloud->>Admin: Push to Moderation Queue
     Admin->>Cloud: Approve Proof & Verify Geo-Stamp
-    Cloud-->>App: Real-Time Notification: +50 Karma Coins Awarded!
+    Cloud-->>App: Real-Time Notification: +50 Karma Points Awarded!
     App->>Student: Update Daily Streak & Karma Balance
     Student->>Canteen: Open Karma Canteen & Select Chai / Snack Voucher
     Canteen-->>Student: Generate Dynamic Redeem QR Code
@@ -178,7 +178,7 @@ Every screen in Green Yuva has been crafted with a distinctive **Neo-Brutalist U
 | 01. Home Dashboard & AQI | 02. Real-time Notifications | 03. Green Yuva Hubs |
 | :---: | :---: | :---: |
 | <img src="screenshots/showcase/01_home_dashboard.png" width="100%" alt="Home Dashboard" /> | <img src="screenshots/showcase/02_notifications.png" width="100%" alt="Notifications" /> | <img src="screenshots/showcase/03_green_yuva_hubs.png" width="100%" alt="Module Hubs" /> |
-| *Live CPCB AQI, active streak counter, Karma Coins display, and instant Canteen shortcuts.* | *Push alerts for verification approvals, university giveaways, and streak reminders.* | *Full navigation hub: YuvaSwap, GreenRush Radar, YuvaSense, and YuvaVibe.* |
+| *Live CPCB AQI, active streak counter, Karma Points balance, and instant Canteen shortcuts.* | *Push alerts for verification approvals, university giveaways, and streak reminders.* | *Full navigation hub: YuvaSwap, GreenRush Radar, YuvaSense, and YuvaVibe.* |
 
 ---
 
@@ -210,7 +210,7 @@ Every screen in Green Yuva has been crafted with a distinctive **Neo-Brutalist U
 | 13. YuvaSathi AI Tutor | 14. Campus Activities Sprint | 15. User Profile & Karma History |
 | :---: | :---: | :---: |
 | <img src="screenshots/showcase/13_yuvasathi_ai_tutor.png" width="100%" alt="YuvaSathi AI" /> | <img src="screenshots/showcase/14_campus_activities.png" width="100%" alt="Campus Activities" /> | <img src="screenshots/showcase/15_user_profile.png" width="100%" alt="User Profile" /> |
-| *Intelligent conversational assistant for campus zero-waste tips and project guidance.* | *PCCOE Pawana River Desilting Drive and Campus Solar Microgrid Audit tracks.* | *Eco Campus Champion rank, 100 Karma Coins, badges, and complete action ledger.* |
+| *Intelligent conversational assistant for campus zero-waste tips and project guidance.* | *PCCOE Pawana River Desilting Drive and Campus Solar Microgrid Audit tracks.* | *Eco Campus Champion rank, 100 Karma Points, achievement badges, and verified action history.* |
 
 ---
 
@@ -239,7 +239,7 @@ Every screen in Green Yuva has been crafted with a distinctive **Neo-Brutalist U
 
 ### 1. Hybrid Dual-Engine Cloud Pipeline
 Green Yuva implements an enterprise-grade **multi-cloud hybrid architecture**:
-* **Sub-Second Real-Time Synchronization**: Firebase Cloud Firestore manages reactive state changes (leaderboard rankings, Karma Coin balances, instant notifications, and moderation queues) with continuous WebSocket listeners.
+* **Sub-Second Real-Time Synchronization**: Firebase Cloud Firestore manages reactive state changes (leaderboard rankings, Karma Points balances, instant notifications, and moderation queues) with continuous WebSocket listeners.
 * **Distributed Binary Storage**: Supabase S3 handles large multi-part media uploads across isolated buckets:
   * `avatars`: User profile pictures with automatic public CDN edge caching.
   * `proofs`: Geo-tagged mission verification images submitted by students.
@@ -302,9 +302,9 @@ flutter build apk --release
 - [x] **Phase 2: Hyperlocal GreenRush Radar** — GPS-enabled tactical radar with geo-fenced campus mission hubs.
 - [x] **Phase 3: YuvaSwap Circular Marketplace** — Student-to-student exchange with automated CO2 savings algorithms.
 - [x] **Phase 4: YuvaSense & Real-Time CPCB AQI** — Central Pollution Control Board live telemetry and IMD disaster warnings.
-- [x] **Phase 5: Karma Canteen & UPI Tokenomics** — Real-world perks redeemable at college cafeterias.
+- [x] **Phase 5: Karma Canteen & Rewards System** — Real-world perks and vouchers redeemable at college cafeterias.
 - [ ] **Phase 6: Multi-University Inter-Campus League** — State-level leaderboards comparing carbon offsets between institutions.
-- [ ] **Phase 7: IoT Smart Bin Integration** — NFC/QR-enabled smart waste bins that instantly dispense Karma Coins upon e-waste disposal.
+- [ ] **Phase 7: IoT Smart Bin Integration** — NFC/QR-enabled smart waste bins that instantly award Karma Points upon verified e-waste disposal.
 
 ---
 

@@ -61,6 +61,8 @@ android/build/
 *.pptx
 *.ppt
 *.pdf
+*.docx
+GreenYuva_Sankalp_Pitch_Script.*
 *.zip
 *.tar.gz
 
